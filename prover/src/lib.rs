@@ -15,6 +15,9 @@ use trace_decoder::{
 };
 use tracing::info;
 
+#[cfg(not(feature = "test_only"))]
+use paladin::directive::Literal;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ProverInput {
     pub block_trace: BlockTrace,
@@ -56,7 +59,7 @@ impl ProverInput {
                 intern: p,
             });
 
-            let block_proof = paladin::Literal(proof)
+            let block_proof = Literal(proof)
                 .map(&ops::BlockProof { prev })
                 .run(runtime)
                 .await?;
