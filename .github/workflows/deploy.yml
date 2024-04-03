@@ -25,6 +25,9 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Get docker image meta (leader)
         id: leader-meta
         uses: docker/metadata-action@v5
@@ -47,7 +50,7 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_ID }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           token_format: 'access_token'
-          access_token_lifetime: '300s'
+          access_token_lifetime: '900s'
 
       - name: Login to GCR
         uses: docker/login-action@v3
@@ -55,6 +58,15 @@ jobs:
           registry: us.gcr.io
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Build and push worker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: worker.Dockerfile
+          push: true
+          tags: ${{ steps.worker-meta.outputs.tags }}
+          labels: ${{ steps.worker-meta.outputs.labels }}
 
       - name: Build and push leader
         uses: docker/build-push-action@v5
@@ -65,11 +77,3 @@ jobs:
           tags: ${{ steps.leader-meta.outputs.tags }}
           labels: ${{ steps.leader-meta.outputs.labels }}
 
-      - name: Build and push worker
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: worker.Dockerfile
-          push: true
-          tags: ${{ steps.worker-meta.outputs.tags }}
-          labels: ${{ steps.worker-meta.outputs.labels }}
