@@ -60,7 +60,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: leader.Dockerfile
+          file: leader.Dockerfile
           push: true
           tags: ${{ steps.leader-meta.outputs.tags }}
           labels: ${{ steps.leader-meta.outputs.labels }}
@@ -69,7 +69,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: worker.Dockerfile
+          file: worker.Dockerfile
           push: true
           tags: ${{ steps.worker-meta.outputs.tags }}
           labels: ${{ steps.worker-meta.outputs.labels }}
