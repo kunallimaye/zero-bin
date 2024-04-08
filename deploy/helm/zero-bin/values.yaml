@@ -22,6 +22,7 @@ hull:
                 AMQP_URI:
                   valueFrom: 
                     secretKeyRef:
+                      staticName: true
                       name: rmq-credentials
                       key: amqp_uri
                 RPC_URL:
@@ -40,6 +41,7 @@ hull:
                 AMQP_URI:
                   valueFrom: 
                     secretKeyRef:
+                      staticName: true
                       name: rmq-credentials
                       key: amqp_uri
     service:
