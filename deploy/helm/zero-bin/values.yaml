@@ -8,6 +8,7 @@ hull:
   objects:
     deployment:
       leader:
+        replicas: 1
         pod:
           containers:
             leader:
@@ -26,14 +27,15 @@ hull:
               resources:
                 limits:
                   cpu: 2
-                  memory: 2GiB
+                  memory: 2Gi
                 requests:
                   cpu: 500m
-                  memory: 512MiB
+                  memory: 512Mi
               command:
                 - leader
                 - jerigon
       worker:
+        replicas: 1
         pod:
           containers:
             worker:
@@ -50,10 +52,10 @@ hull:
               resources:
                 limits:
                   cpu: 2
-                  memory: 2GiB
+                  memory: 2Gi
                 requests:
                   cpu: 500m
-                  memory: 512MiB
+                  memory: 512Mi
     service:
       leader:
         type: ClusterIP
