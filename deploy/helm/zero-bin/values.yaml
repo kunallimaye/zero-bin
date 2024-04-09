@@ -60,7 +60,7 @@ hull:
                   memory: 512Mi
     service:
       leader:
-        type: Service # Can change to LoadBalancer
+        type: ClusterIP # Can change to LoadBalancer
         ports:
           http:
             port: 8000 # CHANGEME
