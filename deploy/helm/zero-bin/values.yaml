@@ -35,7 +35,7 @@ hull:
                 - leader
                 - jerigon
       worker:
-        replicas: 1
+        replicas: 1 # CHANGEME
         pod:
           containers:
             worker:
@@ -58,8 +58,8 @@ hull:
                   memory: 512Mi
     service:
       leader:
-        type: ClusterIP
+        type: Service # Can change to LoadBalancer
         ports:
           http:
-            port: 8000
-            targetPort: 8000
+            port: 8000 # CHANGEME
+            targetPort: 8000 #CHANGEME
