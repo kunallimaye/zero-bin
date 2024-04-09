@@ -9,7 +9,7 @@ use paladin::runtime::Runtime;
 use proof_gen::types::PlonkyProofIntern;
 
 /// The main function for the jerigon mode.
-pub(crate) async fn jerigon_main(
+pub async fn jerigon_main(
     runtime: Runtime,
     rpc_url: &str,
     block_number: u64,
