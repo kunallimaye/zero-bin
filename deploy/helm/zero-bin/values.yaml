@@ -4,7 +4,7 @@ hull:
     general:
       fullnameOverride: zero-bin
     specific:
-      version: feat-deploy
+      version: main
   objects:
     deployment:
       leader:
@@ -15,10 +15,6 @@ hull:
                 repository: us.gcr.io/immutable-418115/zero-bin-leader
                 tag: _HT*hull.config.specific.version
               env:
-                SERVER_HOSTNAME:
-                  value: test
-                SERVER_PORT:
-                  value: "8080"
                 AMQP_URI:
                   valueFrom: 
                     secretKeyRef:
@@ -26,7 +22,14 @@ hull:
                       name: rmq-credentials
                       key: amqp_uri
                 RPC_URL:
-                  value: http://10.3.0.2:8585
+                  value: http://10.3.0.2:8545
+              resources:
+                limits:
+                  cpu: 2
+                  memory: 2GiB
+                requests:
+                  cpu: 500m
+                  memory: 512MiB
               command:
                 - leader
                 - jerigon
@@ -44,6 +47,13 @@ hull:
                       staticName: true
                       name: rmq-credentials
                       key: amqp_uri
+              resources:
+                limits:
+                  cpu: 2
+                  memory: 2GiB
+                requests:
+                  cpu: 500m
+                  memory: 512MiB
     service:
       leader:
         type: ClusterIP
