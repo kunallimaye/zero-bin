@@ -1,16 +1,17 @@
 //! This is useful for fetching [ProverInput] per block
-use prover::ProverInput;
-use rpc::{FetchProverInputRequest, fetch_prover_input};
-use super::input::BlockSource;
-use log::{error, info};
 use anyhow::Error;
+use log::{error, info};
+use prover::ProverInput;
+use rpc::{fetch_prover_input, FetchProverInputRequest};
+
+use super::input::BlockSource;
 
 //==============================================================================
 // FetchError
 //==============================================================================
 #[derive(Debug)]
 pub enum FetchError {
-    ZeroBinRpcFetchError(Error)
+    ZeroBinRpcFetchError(Error),
 }
 
 impl std::fmt::Display for FetchError {
@@ -31,19 +32,21 @@ pub async fn fetch(
     checkpoint_block_number: Option<u64>,
     source: &BlockSource,
 ) -> Result<ProverInput, FetchError> {
-
     match source {
         // Use ZeroBing's RPC fetch
         BlockSource::ZeroBinRpc { rpc_url } => {
-            info!("Requesting from block {} from RPC ({})", block_number, rpc_url);
+            info!(
+                "Requesting from block {} from RPC ({})",
+                block_number, rpc_url
+            );
             let fetch_prover_input_request = FetchProverInputRequest {
                 rpc_url: rpc_url.as_str(),
-                block_number: block_number,
+                block_number,
                 checkpoint_block_number: match checkpoint_block_number {
                     Some(checkpoint) => checkpoint,
                     None if block_number == 0 => 0,
                     None => block_number - 1,
-                }
+                },
             };
 
             match fetch_prover_input(fetch_prover_input_request).await {
@@ -52,7 +55,6 @@ pub async fn fetch(
                     error!("Failed to fetch prover input: {}", err);
                     Err(FetchError::ZeroBinRpcFetchError(err))
                 }
-
             }
         }
     }

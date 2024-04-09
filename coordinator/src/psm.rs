@@ -53,6 +53,6 @@ pub fn load_psm_from_env() -> ProverStateManager {
 
     ProverStateManager {
         circuit_config: CircuitConfig::default(),
-        persistence: persistence,
+        persistence,
     }
 }

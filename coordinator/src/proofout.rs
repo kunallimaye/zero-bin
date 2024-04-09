@@ -24,7 +24,7 @@ impl std::error::Error for ProofOutputError {}
 
 #[derive(Debug)]
 pub enum ProofOutputBuildError {
-    DirectoryCreation(anyhow::Error)
+    DirectoryCreation(anyhow::Error),
 }
 
 impl std::fmt::Display for ProofOutputBuildError {
@@ -66,39 +66,43 @@ impl ProofOutput {
     pub fn from_method(method: &ProofOutputMethod) -> Result<Self, ProofOutputBuildError> {
         match method {
             ProofOutputMethod::LocalDirectory { prefix: _ } => {
-
-                let dirpath = match std::env::var(PROOF_OUT_LOCAL_DIR_ENVKEY){
+                let dirpath = match std::env::var(PROOF_OUT_LOCAL_DIR_ENVKEY) {
                     Ok(dirpath_str) => {
                         info!("Using {} for proof output directory path", dirpath_str);
                         PathBuf::from(dirpath_str)
-                    },
+                    }
                     Err(VarError::NotPresent) => {
-                        warn!("No proof out directory, using default: {}", PROOF_OUT_LOCAL_DIR_DFLT);
+                        warn!(
+                            "No proof out directory, using default: {}",
+                            PROOF_OUT_LOCAL_DIR_DFLT
+                        );
                         PathBuf::from(PROOF_OUT_LOCAL_DIR_DFLT)
-                    },
+                    }
                     Err(VarError::NotUnicode(os_str)) => {
                         panic!("Non-Unicode proof out local directory: {:?}", os_str);
-                    },
+                    }
                 };
 
                 match (dirpath.exists(), dirpath.is_dir()) {
                     (true, true) => debug!("`{:?}` is pre-existing directory", dirpath),
-                    (true, false) => panic!("ProofOutput directory is not a directory: {:?}", dirpath),
+                    (true, false) => {
+                        panic!("ProofOutput directory is not a directory: {:?}", dirpath)
+                    }
                     (false, _) => {
                         info!("Creating directory: {:?}", dirpath);
                         match create_dir_all(dirpath.clone()) {
                             Ok(_) => debug!("Successfully created directory: {:?}", dirpath),
                             Err(err) => {
                                 error!("Failed to create directory {:?}: {}", dirpath, err);
-                                return Err(ProofOutputBuildError::DirectoryCreation(err.into()))
-                            },
+                                return Err(ProofOutputBuildError::DirectoryCreation(err.into()));
+                            }
                         }
                     }
                 };
 
                 Ok(Self {
                     method: method.clone(),
-                    data: ProofOutputData::LocalDirectory { dirpath: dirpath }
+                    data: ProofOutputData::LocalDirectory { dirpath },
                 })
             }
         }
@@ -107,7 +111,10 @@ impl ProofOutput {
     pub fn write(&self, proof: GeneratedBlockProof) -> Result<(), ProofOutputError> {
         debug!("Attempting to output proof for block {}", proof.b_height);
         match (&self.method, &self.data) {
-            (ProofOutputMethod::LocalDirectory { prefix }, ProofOutputData::LocalDirectory { dirpath }) => {
+            (
+                ProofOutputMethod::LocalDirectory { prefix },
+                ProofOutputData::LocalDirectory { dirpath },
+            ) => {
                 let filepath = dirpath.join(format!("{}_{}.json", prefix, proof.b_height));
                 // Attempt to create the file
                 let file = match std::fs::File::create(filepath.clone()) {
@@ -126,8 +133,8 @@ impl ProofOutput {
                     }
                 }
                 Ok(())
-            },
-            (_, _) => Err(ProofOutputError::MethodDataMismatch)
+            }
+            (_, _) => Err(ProofOutputError::MethodDataMismatch),
         }
     }
 }

@@ -1,5 +1,5 @@
 //! This module contains a lot of the important data for benchmarking purposes.
-//! 
+//!
 //! TODO: Switch to using the CSV trait, it'll probably be easier
 use std::{fs::create_dir_all, io::Write, path::PathBuf, thread::sleep, time::Duration};
 
@@ -189,7 +189,7 @@ impl BenchmarkingOutputData {
                     }
                 }
 
-                Ok(Self::LocalCsv { dirpath: dirpath })
+                Ok(Self::LocalCsv { dirpath })
             }
             #[allow(unreachable_patterns)]
             _ => Ok(Self::NotApplicable),
@@ -243,7 +243,7 @@ impl BenchmarkingOutput {
     ) -> Result<Self, BenchmarkingOutputBuildError> {
         Ok(BenchmarkingOutput {
             data: BenchmarkingOutputData::from_config(&config).await?,
-            config: config,
+            config,
             stats: match init_capacity {
                 Some(capacity) => Vec::with_capacity(capacity),
                 None => Vec::new(),
@@ -276,7 +276,7 @@ impl BenchmarkingOutput {
                                 bucket: bucket.clone(),
                                 ..Default::default()
                             },
-                            String::from(csv_string.clone()),
+                            csv_string.clone(),
                             &UploadType::Simple(Media::new(file_name.clone())),
                         )
                         .await;
@@ -310,7 +310,10 @@ impl BenchmarkingOutput {
                     }
                 }
             }
-            (BenchmarkOutputConfig::LocalCsv { file_name }, BenchmarkingOutputData::LocalCsv { dirpath }) => {
+            (
+                BenchmarkOutputConfig::LocalCsv { file_name },
+                BenchmarkingOutputData::LocalCsv { dirpath },
+            ) => {
                 let file_path = dirpath.join(file_name);
                 debug!("Attempting to create file: {:?}", file_path);
                 let mut file = match std::fs::File::create_new(file_path.clone()) {

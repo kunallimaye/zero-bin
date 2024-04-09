@@ -1,5 +1,7 @@
 use anyhow::Result;
 use ethereum_types::U256;
+#[cfg(feature = "test_only")]
+use futures::TryStreamExt;
 use ops::TxProof;
 #[cfg(not(feature = "test_only"))]
 use paladin::directive::Literal;
@@ -7,8 +9,6 @@ use paladin::{
     directive::{Directive, IndexedStream},
     runtime::Runtime,
 };
-#[cfg(feature="test_only")]
-use futures::TryStreamExt;
 use proof_gen::{proof_types::GeneratedBlockProof, types::PlonkyProofIntern};
 use serde::{Deserialize, Serialize};
 use trace_decoder::{
@@ -16,7 +16,7 @@ use trace_decoder::{
     trace_protocol::BlockTrace,
     types::{CodeHash, OtherBlockData},
 };
-#[cfg(feature="test_only")]
+#[cfg(feature = "test_only")]
 use tracing::info;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -92,7 +92,7 @@ impl ProverInput {
             .await?
             .try_collect::<Vec<_>>()
             .await?;
- 
+
         info!("Successfully generated witness for block {block_number}.");
 
         // Dummy proof to match expected output type.

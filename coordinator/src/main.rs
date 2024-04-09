@@ -2,8 +2,8 @@
 //! proofs
 use std::{
     env,
+    path::PathBuf,
     time::{SystemTime, UNIX_EPOCH},
-    path::PathBuf
 };
 
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
@@ -67,7 +67,7 @@ async fn main() -> Result<()> {
                 match PathBuf::from("circuits").exists() {
                     true => {
                         info!("Able to locate pre-generated circuits directory, still may take a while to load");
-                    },
+                    }
                     false => {
                         warn!("Unable to locate a circuits directory with pre-generated circuits.  Generation will likely take a long time.");
                     }
@@ -76,7 +76,7 @@ async fn main() -> Result<()> {
                 match psm.initialize() {
                     Ok(_) => {
                         info!("Initialized the ProverStateManager");
-                    },
+                    }
                     Err(err) => {
                         error!("Failed to initialize the ProverStateManager: {}", err);
                         panic!("Failed to initialize the ProverStateManager: {}", err);

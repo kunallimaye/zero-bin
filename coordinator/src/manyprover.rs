@@ -57,8 +57,8 @@ pub async fn prove_blocks(
             Ok(proof_out) => Some(proof_out),
             Err(err) => {
                 error!("Failed to build proof out");
-                return Err(ManyProverError::ProofOutBuildError(err))
-            },
+                return Err(ManyProverError::ProofOutBuildError(err));
+            }
         },
         None => None,
     };
@@ -178,7 +178,7 @@ pub async fn prove_blocks(
                     "Failed to generate block {}'s proof: {}",
                     cur_block_num, err
                 );
-                return Err(ManyProverError::Proof(err.into()));
+                return Err(ManyProverError::Proof(err));
             }
         };
         let proof_duration = proof_start_instance.elapsed();
@@ -218,7 +218,7 @@ pub async fn prove_blocks(
                 Ok(_) => info!("Successfully wrote proof"),
                 Err(err) => {
                     error!("Failed to write proof");
-                    return Err(ManyProverError::ProofOutError(err))
+                    return Err(ManyProverError::ProofOutError(err));
                 }
             }
         } else {
@@ -246,7 +246,7 @@ pub async fn prove_blocks(
         cur_block_num += 1;
     }
 
-    // We can determine the gas here?  We may need to implement some sort of 
+    // We can determine the gas here?  We may need to implement some sort of
     // functionality to track the proofs, reload and calculate the gas, assuming
     // we do not want that to occur during the benchmark timing.
 
