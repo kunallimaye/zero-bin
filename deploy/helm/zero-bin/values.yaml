@@ -4,7 +4,7 @@ hull:
     general:
       fullnameOverride: zero-bin
     specific:
-      version: main
+      version: develop
   objects:
     deployment:
       leader:
