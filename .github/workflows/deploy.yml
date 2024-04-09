@@ -117,4 +117,4 @@ jobs:
         run: |-
           pwd && ls -lh
           cd ./deploy/helm
-          helm upgrade zero-bin ./zero-bin -f ./zero-bin/values.yaml --set  hull.config.specific.version=${GITHUB_REF_NAME} --reuse-values -n zkevm --install
+          helm upgrade zero-bin ./zero-bin -f ./zero-bin/values.yaml --wait --set hull.config.specific.version=${GITHUB_REF_NAME} --reuse-values -n zkevm --install
