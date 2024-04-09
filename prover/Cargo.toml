@@ -22,6 +22,5 @@ futures = { workspace = true }
 ops = { path = "../ops" }
 
 [features]
-default = ["benchmarking"]
+default = []
 test_only = ["ops/test_only"]
-benchmarking = []
