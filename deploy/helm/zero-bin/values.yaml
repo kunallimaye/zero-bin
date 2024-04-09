@@ -1,0 +1,68 @@
+
+hull:
+  config:
+    general:
+      fullnameOverride: zero-bin
+    specific:
+      version: develop
+  objects:
+    deployment:
+      leader:
+        replicas: 0 # CHANGEME
+        pod:
+          containers:
+            leader:
+              image:
+                repository: us.gcr.io/immutable-418115/zero-bin-leader
+                tag: _HT*hull.config.specific.version
+              env:
+                AMQP_URI:
+                  valueFrom: 
+                    secretKeyRef:
+                      staticName: true
+                      name: rmq-credentials
+                      key: amqp_uri
+                RPC_URL:
+                  value: http://10.3.0.2:8545
+              ports:
+                rpc:
+                  containerPort: 8000 #CHANGEME
+              resources:
+                limits:
+                  cpu: 2
+                  memory: 6Gi
+                requests:
+                  cpu: 1
+                  memory: 2Gi
+              command:
+                - leader
+                - jerigon
+      worker:
+        replicas: 1 # CHANGEME
+        pod:
+          containers:
+            worker:
+              image:
+                repository: us.gcr.io/immutable-418115/zero-bin-worker
+                tag: _HT*hull.config.specific.version
+              env:
+                AMQP_URI:
+                  valueFrom: 
+                    secretKeyRef:
+                      staticName: true
+                      name: rmq-credentials
+                      key: amqp_uri
+              resources:
+                limits:
+                  cpu: 2
+                  memory: 6Gi
+                requests:
+                  cpu: 1
+                  memory: 2Gi
+    service:
+      leader:
+        type: ClusterIP # Can change to LoadBalancer
+        ports:
+          http:
+            port: 8000 # CHANGEME
+            targetPort: 8000 #CHANGEME
