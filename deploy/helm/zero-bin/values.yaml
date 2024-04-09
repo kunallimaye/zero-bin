@@ -8,7 +8,7 @@ hull:
   objects:
     deployment:
       leader:
-        replicas: 1
+        replicas: 0 # CHANGEME
         pod:
           containers:
             leader:
@@ -25,7 +25,8 @@ hull:
                 RPC_URL:
                   value: http://10.3.0.2:8545
               ports:
-                containerPort: 8000 #CHANGEME
+                rpc:
+                  containerPort: 8000 #CHANGEME
               resources:
                 limits:
                   cpu: 2
