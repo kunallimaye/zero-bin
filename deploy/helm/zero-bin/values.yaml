@@ -8,6 +8,7 @@ hull:
   objects:
     deployment:
       leader:
+        replicas: 0 # CHANGEME
         pod:
           containers:
             leader:
@@ -23,17 +24,21 @@ hull:
                       key: amqp_uri
                 RPC_URL:
                   value: http://10.3.0.2:8545
+              ports:
+                rpc:
+                  containerPort: 8000 #CHANGEME
               resources:
                 limits:
                   cpu: 2
-                  memory: 2GiB
+                  memory: 2Gi
                 requests:
                   cpu: 500m
-                  memory: 512MiB
+                  memory: 512Mi
               command:
                 - leader
                 - jerigon
       worker:
+        replicas: 1 # CHANGEME
         pod:
           containers:
             worker:
@@ -50,14 +55,14 @@ hull:
               resources:
                 limits:
                   cpu: 2
-                  memory: 2GiB
+                  memory: 2Gi
                 requests:
                   cpu: 500m
-                  memory: 512MiB
+                  memory: 512Mi
     service:
       leader:
-        type: ClusterIP
+        type: ClusterIP # Can change to LoadBalancer
         ports:
           http:
-            port: 8000
-            targetPort: 8000
+            port: 8000 # CHANGEME
+            targetPort: 8000 #CHANGEME
