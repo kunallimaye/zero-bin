@@ -24,6 +24,8 @@ hull:
                       key: amqp_uri
                 RPC_URL:
                   value: http://10.3.0.2:8545
+              ports:
+                containerPort: 8000 #CHANGEME
               resources:
                 limits:
                   cpu: 2
