@@ -30,10 +30,10 @@ hull:
               resources:
                 limits:
                   cpu: 2
-                  memory: 2Gi
+                  memory: 6Gi
                 requests:
-                  cpu: 500m
-                  memory: 512Mi
+                  cpu: 1
+                  memory: 2Gi
               command:
                 - leader
                 - jerigon
@@ -55,10 +55,10 @@ hull:
               resources:
                 limits:
                   cpu: 2
-                  memory: 2Gi
+                  memory: 6Gi
                 requests:
-                  cpu: 500m
-                  memory: 512Mi
+                  cpu: 1
+                  memory: 2Gi
     service:
       leader:
         type: ClusterIP # Can change to LoadBalancer
