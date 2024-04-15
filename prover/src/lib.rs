@@ -1,7 +1,10 @@
 use anyhow::Result;
 use ethereum_types::U256;
-use futures::stream::TryStreamExt;
+#[cfg(feature = "test_only")]
+use futures::TryStreamExt;
 use ops::TxProof;
+#[cfg(not(feature = "test_only"))]
+use paladin::directive::Literal;
 use paladin::{
     directive::{Directive, IndexedStream},
     runtime::Runtime,
@@ -13,6 +16,7 @@ use trace_decoder::{
     trace_protocol::BlockTrace,
     types::{CodeHash, OtherBlockData},
 };
+#[cfg(feature = "test_only")]
 use tracing::info;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -29,6 +33,7 @@ impl ProverInput {
         self.other_data.b_data.b_meta.block_number
     }
 
+    /// Evaluates a singular block
     #[cfg(not(feature = "test_only"))]
     pub async fn prove(
         self,
@@ -36,8 +41,6 @@ impl ProverInput {
         previous: Option<PlonkyProofIntern>,
     ) -> Result<GeneratedBlockProof> {
         let block_number = self.get_block_number();
-        info!("Proving block {block_number}");
-
         let other_data = self.other_data;
         let txs = self.block_trace.into_txn_proof_gen_ir(
             &ProcessingMeta::new(resolve_code_hash_fn),
@@ -56,12 +59,12 @@ impl ProverInput {
                 intern: p,
             });
 
-            let block_proof = paladin::Literal(proof)
+            let block_proof = Literal(proof)
                 .map(&ops::BlockProof { prev })
                 .run(runtime)
                 .await?;
 
-            info!("Successfully proved block {block_number}");
+            // Return the block proof
             Ok(block_proof.0)
         } else {
             anyhow::bail!("AggProof is is not GeneratedAggProof")

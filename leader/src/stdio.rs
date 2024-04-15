@@ -6,10 +6,7 @@ use proof_gen::types::PlonkyProofIntern;
 use prover::ProverInput;
 
 /// The main function for the stdio mode.
-pub(crate) async fn stdio_main(
-    runtime: Runtime,
-    previous: Option<PlonkyProofIntern>,
-) -> Result<()> {
+pub async fn stdio_main(runtime: Runtime, previous: Option<PlonkyProofIntern>) -> Result<()> {
     let mut buffer = String::new();
     std::io::stdin().read_to_string(&mut buffer)?;
 
