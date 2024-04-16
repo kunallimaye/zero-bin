@@ -30,7 +30,9 @@ fn get_previous_proof(path: Option<PathBuf>) -> Result<Option<PlonkyProofIntern>
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
-    init::tracing();
+    #[cfg(feature="extra_log")]
+    env_logger::init();
+    // init::tracing();
 
     let args = cli::Cli::parse();
     if let paladin::config::Runtime::InMemory = args.paladin.runtime {

@@ -22,6 +22,7 @@ serde_json = { workspace = true }
 serde_path_to_error = { workspace = true }
 ethereum-types = { workspace = true }
 axum = "0.7.4"
+env_logger = { version = "0.11.3", optional = true}
 
 # Local dependencies
 ops = { path = "../ops" }
@@ -30,5 +31,6 @@ rpc = { path = "../rpc" }
 common = { path = "../common" }
 
 [features]
-default = []
+default = ["extra_log"]
 test_only = ["ops/test_only", "prover/test_only"]
+extra_log = ["dep:env_logger"]

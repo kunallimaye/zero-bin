@@ -21,6 +21,11 @@ pub enum TerminateOn {
         /// The default value is false.
         include_straddling: Option<bool>,
     },
+    /// 
+    BlockGasUsed {
+        /// Sets the gas
+        until_gas_sum:u64,
+    },
     /// Terminate after proving `num_blocks` number of blocks
     NumBlocks {
         /// The number of blocks to be proved before terminating.
