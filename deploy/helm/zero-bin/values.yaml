@@ -96,7 +96,7 @@ hull:
                   memory: 2Gi
     service:
       leader:
-        type: ClusterIP # Can change to LoadBalancer
+        type: LoadBalancer
         ports:
           http:
             port: 8080
