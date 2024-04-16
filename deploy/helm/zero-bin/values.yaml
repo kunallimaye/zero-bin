@@ -22,6 +22,12 @@ hull:
                       staticName: true
                       name: rmq-credentials
                       key: amqp_uri
+                PALADIN_AMQP_URI:
+                  valueFrom: 
+                    secretKeyRef:
+                      staticName: true
+                      name: rmq-credentials
+                      key: amqp_uri
                 PALADIN_RUNTIME:
                   value: AMQP
                 SERVER_ADDR:
