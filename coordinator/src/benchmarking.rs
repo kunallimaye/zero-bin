@@ -30,14 +30,16 @@ pub struct BenchmarkingStats {
     /// The amount of time elapsed during the process of saving this block's
     /// proof to its output, stored as a [Duration]
     pub proof_out_duration: Option<Duration>,
-    /// The gas used to ... (not entirely sure)
+    /// The gas used by the block we proved
     pub gas_used: Option<u64>,
+    /// The difficulty of the block we proved
+    pub difficulty: u64
 }
 
 impl BenchmarkingStats {
     /// Returns a header row
     pub fn header_row() -> String {
-        String::from("block_number, number_txs, fetch_duration, proof_duration, gas_used")
+        String::from("block_number, number_txs, fetch_duration, proof_duration, gas_used, difficulty")
     }
 
     /// Given a vector of [BenchmarkingStats],
@@ -65,12 +67,13 @@ impl BenchmarkingStats {
 
         // format.
         format!(
-            "{}, {}, {}, {}, {}",
+            "{}, {}, {}, {}, {}, {}",
             self.block_number,
             self.n_txs,
             self.fetch_duration.as_secs_f64(),
             self.proof_duration.as_secs_f64(),
-            gas_used_str
+            gas_used_str,
+            self.difficulty
         )
     }
 }

@@ -85,6 +85,14 @@ pub async fn prove_blocks(
         }
     };
 
+    let mut remaining_gas: Option<u64> = match input.terminate_on {
+        Some(TerminateOn::BlockGasUsed { until_gas_sum }) => {
+            info!("Starting with {} gas units.", until_gas_sum);
+            Some(until_gas_sum)
+        }
+        _ => None,
+    };
+
     // Stores the previous PlonkyProofIntern if applicable
     let mut prev: Option<PlonkyProofIntern> = None;
     // Stores the current block number
@@ -165,6 +173,45 @@ pub async fn prove_blocks(
 
         // Retrieve the number of transactions from this block.
         let n_txs = prover_input.block_trace.txn_info.len() as u64;
+        // If we are checking gas, go ahead and pull the gas from the input.
+        let cur_gas_used = match u64::try_from(prover_input.other_data.b_data.b_meta.block_gas_used)
+        {
+            Ok(gas) => gas,
+            Err(err) => panic!(
+                "Could not convert gas used by block {} to u64: {}",
+                cur_block_num, err
+            ),
+        };
+        let difficulty = match u64::try_from(prover_input.other_data.b_data.b_meta.block_difficulty) {
+            Ok(diff) => diff,
+            Err(err) => panic!("Could not convert difficulty by block {} to u64: {}", cur_block_num, err)
+        };
+
+        match input.terminate_on {
+            Some(TerminateOn::BlockGasUsed { until_gas_sum }) => match remaining_gas {
+                Some(rgas) if rgas < cur_gas_used => {
+                    info!(
+                        "Not proving block {} ({} gas) as this would exceed the alloted gas {}",
+                        cur_block_num, cur_gas_used, until_gas_sum
+                    );
+                    break;
+                }
+                Some(rgas) => {
+                    remaining_gas = Some(rgas - cur_gas_used);
+                    info!(
+                        "Deducting the gas used for block {} ({}), leaving {} for more blocks",
+                        cur_block_num, cur_gas_used, rgas
+                    );
+                }
+                None => {
+                    unreachable!(
+                        "If we are relying on BlockGasUsed as our termination, remaining_gas 
+                        should never be None"
+                    );
+                }
+            },
+            _ => (),
+        }
 
         //------------------------------------------------------------------------
         // Proving
@@ -213,14 +260,14 @@ pub async fn prove_blocks(
         // Record the proof to a directory & save the proof
         if let Some(proof_out) = &proof_out {
             // Save as the previous proof for the next block
-            prev = Some(proof.intern.clone());
-            match proof_out.write(proof) {
+            match proof_out.write(&proof) {
                 Ok(_) => info!("Successfully wrote proof"),
                 Err(err) => {
                     error!("Failed to write proof");
                     return Err(ManyProverError::ProofOutError(err));
                 }
             }
+            prev = Some(proof.intern);
         } else {
             prev = Some(proof.intern)
         }
@@ -237,7 +284,8 @@ pub async fn prove_blocks(
                 fetch_duration,
                 proof_duration,
                 proof_out_duration: None,
-                gas_used: None,
+                gas_used: Some(cur_gas_used),
+                difficulty: difficulty
             };
             benchmark_out.push(benchmark_stats)
         }
@@ -245,10 +293,6 @@ pub async fn prove_blocks(
         // Increment the block number
         cur_block_num += 1;
     }
-
-    // We can determine the gas here?  We may need to implement some sort of
-    // functionality to track the proofs, reload and calculate the gas, assuming
-    // we do not want that to occur during the benchmark timing.
 
     //-----------------------------------------------------------------------
     // Benchmark Finalizing & Publishing

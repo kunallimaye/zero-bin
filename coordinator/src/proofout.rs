@@ -59,7 +59,7 @@ pub struct ProofOutput {
     pub data: ProofOutputData,
 }
 
-pub const PROOF_OUT_LOCAL_DIR_ENVKEY: &str = "PROOF_OUT_LOCAL_DIR";
+pub const PROOF_OUT_LOCAL_DIR_ENVKEY: &str = "PROOF_OUT_LOCAL_DIRPATH";
 pub const PROOF_OUT_LOCAL_DIR_DFLT: &str = "proofs_out/";
 
 impl ProofOutput {
@@ -108,7 +108,7 @@ impl ProofOutput {
         }
     }
 
-    pub fn write(&self, proof: GeneratedBlockProof) -> Result<(), ProofOutputError> {
+    pub fn write(&self, proof: &GeneratedBlockProof) -> Result<(), ProofOutputError> {
         debug!("Attempting to output proof for block {}", proof.b_height);
         match (&self.method, &self.data) {
             (
