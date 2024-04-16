@@ -26,7 +26,7 @@ pub mod proofout;
 pub mod psm;
 
 pub const SERVER_ADDR_ENVKEY: &str = "SERVER_ADDR";
-pub const DFLT_SERVER_ADDR: &str = "127.0.0.1:8080";
+pub const DFLT_SERVER_ADDR: &str = "0.0.0.0:8080";
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -166,11 +166,10 @@ async fn handle_post(
     let start_time = match SystemTime::now().duration_since(UNIX_EPOCH) {
         Ok(duration) => duration.as_secs(),
         Err(err) => {
-            warn!(
+            panic!(
                 "Unable to determine current time, using 0 for current seconds: {}",
                 err
             );
-            0
         }
     };
     info!("Received request to prove blocks (Request: {})", start_time);
@@ -205,7 +204,7 @@ pub const PALADIN_AMQP_NUM_WORKERS_ENVKEY: &str = "PALADIN_AMQP_NUM_WORKERS";
 pub const PALADIN_AMQP_URI_ENVKEY: &str = "PALADIN_AMQP_URI";
 /// The default number of workers to be used when operating in memory if not
 /// specified in the environment
-pub const DFLT_NUM_WORKERS: usize = 4;
+pub const DFLT_NUM_WORKERS: usize = 1;
 
 /// Constructs the [Config] given environment variables.
 fn build_paladin_config_from_env() -> Config {
@@ -234,7 +233,7 @@ fn build_paladin_config_from_env() -> Config {
         }
         Err(env::VarError::NotPresent) => {
             info!("Paladin Runtime not specified, using default");
-            paladin::config::Runtime::default()
+            paladin::config::Runtime::InMemory
         }
         Err(env::VarError::NotUnicode(os_str)) => {
             panic!("Non-Unicode input for Paladin Runtime: {:?}", os_str);
