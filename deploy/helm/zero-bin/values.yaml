@@ -8,7 +8,7 @@ hull:
   objects:
     deployment:
       leader:
-        replicas: 0 # CHANGEME
+        replicas: 1
         pod:
           containers:
             leader:
@@ -22,11 +22,29 @@ hull:
                       staticName: true
                       name: rmq-credentials
                       key: amqp_uri
-                RPC_URL:
-                  value: http://10.3.0.2:8545
+                PALADIN_RUNTIME:
+                  value: AMQP
+                SERVER_ADDR:
+                  value: 0.0.0.0:8080
+                ARITHMETIC_CIRCUIT_SIZE:
+                  value: 16..23
+                BYTE_PACKING_CIRCUIT_SIZE:
+                  value: 9..21
+                CPU_CIRCUIT_SIZE:
+                  value: 12..25
+                KECCAK_CIRCUIT_SIZE:
+                  value: 14..20
+                KECCAK_SPONGE_CIRCUIT_SIZE:
+                  value: 9..15
+                LOGIC_CIRCUIT_SIZE:
+                  value: 12..18
+                MEMORY_CIRCUIT_SIZE:
+                  value: 17..28
+                RUST_LOG:
+                  value: info
               ports:
-                rpc:
-                  containerPort: 8000 #CHANGEME
+                http:
+                  containerPort: 8080
               resources:
                 limits:
                   cpu: 2
@@ -35,8 +53,19 @@ hull:
                   cpu: 1
                   memory: 2Gi
               command:
-                - leader
-                - jerigon
+                - coordinator
+              livenessProbe:
+                httpGet:
+                  path: /health
+                  port: 8080
+                initialDelaySeconds: 60
+                periodSeconds: 5
+              readinessProbe:
+                httpGet:
+                  path: /health
+                  port: 8080
+                initialDelaySeconds: 10
+                periodSeconds: 5
       worker:
         replicas: 1 # CHANGEME
         pod:
@@ -64,5 +93,5 @@ hull:
         type: ClusterIP # Can change to LoadBalancer
         ports:
           http:
-            port: 8000 # CHANGEME
-            targetPort: 8000 #CHANGEME
+            port: 8080
+            targetPort: 8080
