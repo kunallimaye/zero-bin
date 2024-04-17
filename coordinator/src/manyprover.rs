@@ -1,7 +1,7 @@
 //! This module contains everything to prove multiple blocks.
 use std::time::Instant;
 
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use paladin::runtime::Runtime;
 use proof_gen::types::PlonkyProofIntern;
 
@@ -42,9 +42,24 @@ pub async fn prove_blocks(
     input: ProveBlocksInput,
     runtime: &Runtime,
 ) -> Result<(), ManyProverError> {
+    //=================================================================================
+    // Starting messages
+    //=================================================================================
     info!("Initializing to prove blocks...");
 
-    info!("{:#?}", input);
+    info!("RECEIVED INPUT \n{:#?}", input);
+
+    // Gas is always checked, so this parameter is irrelevant
+    match input.check_gas {
+        Some(true) => warn!("Provided check_gas as true, but gas is always checked now."),
+        Some(false) => warn!("Provided check_gas as false, but we always check gas now."),
+        None => ()
+    }
+
+    match input.forward_prev {
+        Some(true) => warn!("There are some issues with forward_prev = true"),
+        Some(false) | None => ()
+    }
 
     //=================================================================================
     // Init & Setup
@@ -149,7 +164,7 @@ pub async fn prove_blocks(
         let fetch_start_instance = Instant::now();
         let prover_input = match fetch(
             cur_block_num,
-            input.checkpoint_block_number,
+            None, // input.checkpoint_block_number,
             &input.block_source,
         )
         .await
@@ -187,6 +202,7 @@ pub async fn prove_blocks(
             Err(err) => panic!("Could not convert difficulty by block {} to u64: {}", cur_block_num, err)
         };
 
+        #[allow(clippy::single_match)]
         match input.terminate_on {
             Some(TerminateOn::BlockGasUsed { until_gas_sum }) => match remaining_gas {
                 Some(rgas) if rgas < cur_gas_used => {
@@ -244,7 +260,7 @@ pub async fn prove_blocks(
                 include_straddling: Some(false) | None,
             }) => {
                 if num_seconds >= benchmark_start_instance.elapsed().as_secs() {
-                    info!("Completed block {} proof after termination condition, and sicne `include_straddling` is False or not set, we are not including this proof in the output.", cur_block_num);
+                    info!("Completed block {} proof after termination condition, and since `include_straddling` is False (or not set), we are not including this proof in the output.", cur_block_num);
                     break;
                 }
             }
@@ -257,7 +273,7 @@ pub async fn prove_blocks(
         // Recording the proof
         //------------------------------------------------------------------------
 
-        // Record the proof to a directory & save the proof
+        // Record the proof if necessary
         if let Some(proof_out) = &proof_out {
             // Save as the previous proof for the next block
             match proof_out.write(&proof) {
@@ -267,10 +283,13 @@ pub async fn prove_blocks(
                     return Err(ManyProverError::ProofOutError(err));
                 }
             }
-            prev = Some(proof.intern);
-        } else {
-            prev = Some(proof.intern)
         }
+
+        // If we need to keep the proof, save it in prev, otherwise do not.
+        prev = match input.forward_prev {
+            Some(true) => Some(proof.intern),
+            Some(false) | None => None,
+        };
 
         //------------------------------------------------------------------------
         // Recording the Benchmark
@@ -285,7 +304,7 @@ pub async fn prove_blocks(
                 proof_duration,
                 proof_out_duration: None,
                 gas_used: Some(cur_gas_used),
-                difficulty: difficulty
+                difficulty
             };
             benchmark_out.push(benchmark_stats)
         }

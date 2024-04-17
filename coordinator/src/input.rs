@@ -21,7 +21,8 @@ pub enum TerminateOn {
         /// The default value is false.
         include_straddling: Option<bool>,
     },
-    /// 
+    /// Prove until the sum of gas of all the blocks we proved is equal to
+    /// `until_gas_sum` amount of gas.
     BlockGasUsed {
         /// Sets the gas
         until_gas_sum:u64,
@@ -55,6 +56,8 @@ use crate::proofout::ProofOutputMethod;
 /// The input for starting the many-blocks proving
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProveBlocksInput {
+    /// The name of the run
+    pub run_name: Option<String>, 
     /// The starting block number
     pub start_block_number: u64,
     /// The checkpoint block number.  If not provided, will be the
@@ -65,7 +68,7 @@ pub struct ProveBlocksInput {
     pub terminate_on: Option<TerminateOn>,
     /// How we source the blocks.
     pub block_source: BlockSource,
-    /// Whether we are checking gas (Defaults to False)
+    /// DEPRECATED
     pub check_gas: Option<bool>,
     /// Stores the output of the proofs. If not provided, no proofs will be
     /// stored
@@ -73,6 +76,10 @@ pub struct ProveBlocksInput {
     /// Stores the output of the benchmark.  If not provided, no benchmarking
     /// stats will be stored
     pub benchmark_output: Option<BenchmarkOutputConfig>,
+    /// Whether or not we should forward the previous proof to the next proof.
+    /// 
+    /// NOTE: There may be some problems if set to true.  Default is false.
+    pub forward_prev: Option<bool>
 }
 
 impl ProveBlocksInput {

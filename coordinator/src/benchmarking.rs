@@ -319,7 +319,7 @@ impl BenchmarkingOutput {
             ) => {
                 let file_path = dirpath.join(file_name);
                 debug!("Attempting to create file: {:?}", file_path);
-                let mut file = match std::fs::File::create_new(file_path.clone()) {
+                let mut file = match std::fs::File::create(file_path.clone()) {
                     Ok(file) => {
                         info!("Created file: {}", file_name);
                         file
