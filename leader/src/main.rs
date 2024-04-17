@@ -30,7 +30,7 @@ fn get_previous_proof(path: Option<PathBuf>) -> Result<Option<PlonkyProofIntern>
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
-    #[cfg(feature="extra_log")]
+    #[cfg(feature = "extra_log")]
     env_logger::init();
     // init::tracing();
 

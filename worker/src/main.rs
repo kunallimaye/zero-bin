@@ -2,9 +2,9 @@ use anyhow::Result;
 use clap::Parser;
 use common::prover_state::cli::CliProverStateConfig;
 use dotenvy::dotenv;
+use log::{error, info};
 use ops::register;
 use paladin::runtime::WorkerRuntime;
-use log::{info, error};
 
 mod init;
 
