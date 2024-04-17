@@ -57,3 +57,21 @@ The example below proves blocks [1,10] using the RPC function listed in ZeroBin,
 }
 
 ```
+
+
+```json
+{
+  "run_name": "run",
+  "start_block_number": 1,
+  "checkpoint_block_number": 1,
+  "terminate_on": {
+    "EndBlock": {"block_number": 10}
+  },
+  "block_source": {
+    "ZeroBinRpc": {"rpc_url": "http://35.208.84.178:8545/"}
+  },
+  "benchmark_output": {
+    "GoogleCloudStorageCsv": {"file_name": "test.csv", "bucket": "zkevm-csv"}
+  }
+}
+```
