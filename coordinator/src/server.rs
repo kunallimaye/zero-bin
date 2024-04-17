@@ -40,7 +40,10 @@ async fn main() -> Result<()> {
 
     // Loading the logger
     debug!("Loading env_logger");
-    env_logger::init();
+    let mut builder = env_logger::Builder::from_default_env();
+    builder.target(env_logger::Target::Stdout); // Redirect logs to stdout
+    builder.init();
+    debug!("EnvLogger setup");
 
     // Initialize the tracing (stolen from Leader Crate's init function)
     // This will initialize a lot of the internal logging, however
