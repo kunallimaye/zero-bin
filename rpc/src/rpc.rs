@@ -119,7 +119,7 @@ impl JerigonTraceResponse {
 
         let parsed = match serde_path_to_error::deserialize(des).context("deserializing debug_traceBlockByNumber") {
             Ok(parsed) => {
-                info!("{:#?}", parsed);
+                debug!("{:#?}", parsed);
                 parsed
             },
             Err(err) => {

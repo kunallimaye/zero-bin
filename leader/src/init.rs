@@ -1,4 +1,6 @@
 use tracing_subscriber::{fmt::format::FmtSpan, prelude::*, util::SubscriberInitExt, EnvFilter};
+
+#[allow(dead_code)]
 pub fn tracing() {
     tracing_subscriber::Registry::default()
         .with(

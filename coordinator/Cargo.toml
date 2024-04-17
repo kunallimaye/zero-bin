@@ -7,6 +7,7 @@ repository.workspace = true
 authors.workspace = true
 keywords.workspace = true
 categories.workspace = true
+default-run = "server"
 
 [dependencies]
 
@@ -32,3 +33,6 @@ actix-web = "4.5.1"
 actix-rt = "2.9.0"
 env_logger = "0.11.3"
 
+[[bin]]
+name = "server"
+path = "src/server.rs"

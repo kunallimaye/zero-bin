@@ -39,6 +39,7 @@ The example below proves blocks [1,10] using the RPC function listed in ZeroBin,
 
 ```json
 {
+  "run_name": "run",
   "start_block_number": 1,
   "checkpoint_block_number": 1,
   "terminate_on": {
@@ -47,7 +48,6 @@ The example below proves blocks [1,10] using the RPC function listed in ZeroBin,
   "block_source": {
     "ZeroBinRpc": {"rpc_url": "http://35.208.84.178:8545/"}
   },
-  "check_gas": false,
   "proof_output": {
     "LocalDirectory": {"prefix": "test"}
   },
