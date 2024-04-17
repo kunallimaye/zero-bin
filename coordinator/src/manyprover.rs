@@ -53,12 +53,12 @@ pub async fn prove_blocks(
     match input.check_gas {
         Some(true) => warn!("Provided check_gas as true, but gas is always checked now."),
         Some(false) => warn!("Provided check_gas as false, but we always check gas now."),
-        None => ()
+        None => (),
     }
 
     match input.forward_prev {
         Some(true) => warn!("There are some issues with forward_prev = true"),
-        Some(false) | None => ()
+        Some(false) | None => (),
     }
 
     //=================================================================================
@@ -197,9 +197,13 @@ pub async fn prove_blocks(
                 cur_block_num, err
             ),
         };
-        let difficulty = match u64::try_from(prover_input.other_data.b_data.b_meta.block_difficulty) {
+        let difficulty = match u64::try_from(prover_input.other_data.b_data.b_meta.block_difficulty)
+        {
             Ok(diff) => diff,
-            Err(err) => panic!("Could not convert difficulty by block {} to u64: {}", cur_block_num, err)
+            Err(err) => panic!(
+                "Could not convert difficulty by block {} to u64: {}",
+                cur_block_num, err
+            ),
         };
 
         #[allow(clippy::single_match)]
@@ -305,7 +309,7 @@ pub async fn prove_blocks(
                 proof_duration,
                 proof_out_duration: None,
                 gas_used: Some(cur_gas_used),
-                difficulty
+                difficulty,
             };
             benchmark_out.push(benchmark_stats)
         }

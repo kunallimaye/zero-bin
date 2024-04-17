@@ -29,7 +29,7 @@ reqwest = { version = "0.11.22", default-features = false, features = [
   "json",
   "rustls-tls",
 ] }
-log = {}
+log = "0.4.21"
 
 
 # Local dependencies

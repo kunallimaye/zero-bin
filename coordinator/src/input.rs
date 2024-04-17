@@ -21,11 +21,21 @@ pub enum TerminateOn {
         /// The default value is false.
         include_straddling: Option<bool>,
     },
+    ElapsedProverTime {
+        /// The number of seconds spent proving before terminating
+        /// Does not include time for generating witnesses.
+        num_seconds: u64,
+        /// Whether or not we should record a block proof if the proof was
+        /// started but not completed before the elapsed time.
+        ///
+        /// The default value is false.
+        include_straddling: Option<bool>,
+    },
     /// Prove until the sum of gas of all the blocks we proved is equal to
     /// `until_gas_sum` amount of gas.
     BlockGasUsed {
         /// Sets the gas
-        until_gas_sum:u64,
+        until_gas_sum: u64,
     },
     /// Terminate after proving `num_blocks` number of blocks
     NumBlocks {
@@ -57,7 +67,7 @@ use crate::proofout::ProofOutputMethod;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProveBlocksInput {
     /// The name of the run
-    pub run_name: Option<String>, 
+    pub run_name: Option<String>,
     /// The starting block number
     pub start_block_number: u64,
     /// The checkpoint block number.  If not provided, will be the
@@ -77,9 +87,9 @@ pub struct ProveBlocksInput {
     /// stats will be stored
     pub benchmark_output: Option<BenchmarkOutputConfig>,
     /// Whether or not we should forward the previous proof to the next proof.
-    /// 
+    ///
     /// NOTE: There may be some problems if set to true.  Default is false.
-    pub forward_prev: Option<bool>
+    pub forward_prev: Option<bool>,
 }
 
 impl ProveBlocksInput {

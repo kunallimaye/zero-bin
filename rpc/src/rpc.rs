@@ -117,13 +117,18 @@ impl JerigonTraceResponse {
         // let parsed = serde_path_to_error::deserialize(des)
         //     .context("deserializing debug_traceBlockByNumber")?;
 
-        let parsed = match serde_path_to_error::deserialize(des).context("deserializing debug_traceBlockByNumber") {
+        let parsed = match serde_path_to_error::deserialize(des)
+            .context("deserializing debug_traceBlockByNumber")
+        {
             Ok(parsed) => {
                 debug!("{:#?}", parsed);
                 parsed
-            },
+            }
             Err(err) => {
-                error!("Error while parsing for JerigonTraceResponse for block {} ({}): {}",  block_number_hex, block_number, err);
+                error!(
+                    "Error while parsing for JerigonTraceResponse for block {} ({}): {}",
+                    block_number_hex, block_number, err
+                );
                 #[cfg(debug_assertions)]
                 error!("The response received: {:#?}", response_txt);
                 return Err(err);
@@ -192,7 +197,10 @@ impl EthGetBlockByNumberResponse {
         let response = match response.context("fetching eth_getBlockByNumber") {
             Ok(response) => response,
             Err(err) => {
-                error!("Failed to receive Response for block {} ({}): {}", block_number, block_number_hex, err);
+                error!(
+                    "Failed to receive Response for block {} ({}): {}",
+                    block_number, block_number_hex, err
+                );
                 return Err(err);
             }
         };
@@ -201,7 +209,7 @@ impl EthGetBlockByNumberResponse {
             Ok(bytes) => bytes,
             Err(err) => {
                 error!("Failed to pull the response body from the eth_getBlockByNumber");
-                return Err(err.into())
+                return Err(err.into());
             }
         };
 
@@ -209,13 +217,18 @@ impl EthGetBlockByNumberResponse {
         let response_txt = std::str::from_utf8(&bytes);
 
         let des = &mut serde_json::Deserializer::from_slice(&bytes);
-        let parsed = match serde_path_to_error::deserialize(des).context("deserializing eth_getBlockByNumber") {
+        let parsed = match serde_path_to_error::deserialize(des)
+            .context("deserializing eth_getBlockByNumber")
+        {
             Ok(parsed) => parsed,
             Err(err) => {
-                error!("Failed to parse Response for block {} ({}): {}", block_number, block_number_hex, err);
+                error!(
+                    "Failed to parse Response for block {} ({}): {}",
+                    block_number, block_number_hex, err
+                );
                 #[cfg(debug_assertions)]
                 error!("Response: {:?}", response_txt);
-                return Err(err)
+                return Err(err);
             }
         };
 

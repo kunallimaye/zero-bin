@@ -33,13 +33,15 @@ pub struct BenchmarkingStats {
     /// The gas used by the block we proved
     pub gas_used: Option<u64>,
     /// The difficulty of the block we proved
-    pub difficulty: u64
+    pub difficulty: u64,
 }
 
 impl BenchmarkingStats {
     /// Returns a header row
     pub fn header_row() -> String {
-        String::from("block_number, number_txs, fetch_duration, proof_duration, gas_used, difficulty")
+        String::from(
+            "block_number, number_txs, fetch_duration, proof_duration, gas_used, difficulty",
+        )
     }
 
     /// Given a vector of [BenchmarkingStats],
