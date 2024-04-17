@@ -154,7 +154,7 @@ async fn main() -> Result<()> {
 
 /// Returns [HttpResponse] ([HttpResponse::Ok]) to respond that we are healthy
 async fn handle_health() -> impl Responder {
-    info!("Received health check, responding `OK`");
+    debug!("Received health check, responding `OK`");
     HttpResponse::Ok().body("OK")
 }
 
