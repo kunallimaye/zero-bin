@@ -233,6 +233,7 @@ pub async fn prove_blocks(
         // Proving
         //------------------------------------------------------------------------
 
+        info!("Starting to prove block {}", cur_block_num);
         let proof_start_instance = Instant::now();
         let proof = match prover_input.prove(runtime, prev).await {
             Ok(proof) => proof,
