@@ -4,6 +4,7 @@ use common::prover_state::cli::CliProverStateConfig;
 use dotenvy::dotenv;
 use ops::register;
 use paladin::runtime::WorkerRuntime;
+use log::{info, error};
 
 mod init;
 
@@ -18,7 +19,8 @@ struct Cli {
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
-    init::tracing();
+    // init::tracing();
+
     let args = Cli::parse();
 
     args.prover_state_config
@@ -26,7 +28,11 @@ async fn main() -> Result<()> {
         .initialize()?;
 
     let runtime = WorkerRuntime::from_config(&args.paladin, register()).await?;
-    runtime.main_loop().await?;
+
+    match runtime.main_loop().await {
+        Ok(()) => info!("Worker main loop ended..."),
+        Err(err) => error!("Error occured with the runtime: {}", err),
+    }
 
     Ok(())
 }
