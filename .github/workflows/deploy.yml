@@ -11,6 +11,7 @@ env:
     type=ref,event=pr
     type=semver,pattern={{version}}
     type=semver,pattern={{major}}.{{minor}}
+    type=sha,format=long,event=branch
   IMAGE_BASE_NAME: us.gcr.io/${{ secrets.GCP_PROJECT_ID }}
 
 jobs:
@@ -117,4 +118,4 @@ jobs:
         run: |-
           pwd && ls -lh
           cd ./deploy/helm
-          helm upgrade zero-bin ./zero-bin -f ./zero-bin/values.yaml --set hull.config.specific.version=${GITHUB_REF_NAME} --reuse-values -n zkevm --install
+          helm upgrade zero-bin ./zero-bin -f ./zero-bin/values.yaml --set hull.config.specific.version=sha-${GITHUB_SHA} --reuse-values -n zkevm --install
