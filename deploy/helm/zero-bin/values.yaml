@@ -74,7 +74,7 @@ hull:
                 initialDelaySeconds: 10
                 periodSeconds: 5
       worker:
-        replicas: 1 # CHANGEME
+        replicas: 5
         pod:
           containers:
             worker:
