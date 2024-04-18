@@ -89,12 +89,14 @@ hull:
                       staticName: true
                       name: rmq-credentials
                       key: amqp_uri
+                RUST_LOG:
+                  value: info
               resources:
                 limits:
-                  cpu: 3
+                  cpu: 4
                   memory: 32Gi
                 requests:
-                  cpu: 3
+                  cpu: 4
                   memory: 32Gi
     service:
       leader:
