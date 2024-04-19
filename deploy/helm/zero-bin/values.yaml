@@ -110,3 +110,19 @@ hull:
           http:
             port: 8080
             targetPort: 8080
+    horizontalpodautoscaler:
+      worker:
+        scaleTargetRef:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: worker
+        minReplicas: 5
+        maxReplicas: 10
+        metrics:
+        - type: jobs.batch
+          resource:
+            name: rabbitmq_queue_messages_ready_rate
+            target:
+              type: AverageValue
+              averageValue: 10
+        
