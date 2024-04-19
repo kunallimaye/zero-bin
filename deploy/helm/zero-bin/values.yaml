@@ -6,6 +6,11 @@ hull:
     specific:
       version: develop
   objects:
+    serviceaccount:
+      default:
+        enabled: true
+        annotations:
+          iam.gke.io/gcp-service-account: immutable-prod-k8s@immutable-418115.iam.gserviceaccount.com
     deployment:
       leader:
         replicas: 1
