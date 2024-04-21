@@ -7,6 +7,7 @@ use google_cloud_storage::{
     client::{Client, ClientConfig},
     http::objects::upload::{Media, UploadObjectRequest, UploadType},
 };
+use chrono::{DateTime, Utc};
 use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
 
@@ -27,11 +28,19 @@ pub struct BenchmarkingStats {
     /// The amount of time elapsed during the process of proving this block,
     /// stored as a [Duration]
     pub proof_duration: Duration,
+    /// The start time of the proof.  [BenchmarkingStats::proof_duration] is a 
+    /// more reliable value to use for the proof duration.  Timestamps measured
+    /// in UTC.
+    pub start_time: DateTime<Utc>,
+    /// The end time of the proof.  [BenchmarkingStats::proof_duration] is a 
+    /// more reliable value to use for the proof duration.  Timestamps measured
+    /// in UTC.
+    pub end_time: DateTime<Utc>,
     /// The amount of time elapsed during the process of saving this block's
     /// proof to its output, stored as a [Duration]
     pub proof_out_duration: Option<Duration>,
     /// The gas used by the block we proved
-    pub gas_used: Option<u64>,
+    pub gas_used: u64,
     /// The difficulty of the block we proved
     pub difficulty: u64,
 }
@@ -40,7 +49,7 @@ impl BenchmarkingStats {
     /// Returns a header row
     pub fn header_row() -> String {
         String::from(
-            "block_number, number_txs, fetch_duration, proof_duration, gas_used, difficulty",
+            "block_number, number_txs, fetch_duration, proof_duration, start_time, end_time, gas_used, difficulty",
         )
     }
 
@@ -61,20 +70,16 @@ impl BenchmarkingStats {
 
     /// Turns [BenchmarkingStats] into a CSV Row
     pub fn as_csv_row(&self) -> String {
-        // Different string depending if present or not
-        let gas_used_str = match self.gas_used {
-            Some(gas_used) => gas_used.to_string(),
-            None => String::from(""),
-        };
-
         // format.
         format!(
-            "{}, {}, {}, {}, {}, {}",
+            "{}, {}, {}, {}, {}, {}, {}, {}",
             self.block_number,
             self.n_txs,
             self.fetch_duration.as_secs_f64(),
             self.proof_duration.as_secs_f64(),
-            gas_used_str,
+            self.start_time.format("%d-%m-%Y %H:%M:%S"),
+            self.end_time.format("%d-%m-%Y %H:%M:%S"),
+            self.gas_used,
             self.difficulty
         )
     }
@@ -143,13 +148,17 @@ impl BenchmarkingOutputData {
             } => {
                 // Produce the GCP Config
                 let gcp_config = match ClientConfig::default().with_auth().await {
-                    Ok(gcp_config) => gcp_config,
+                    Ok(gcp_config) => {
+                            info!("GCS ClientConfig generated with auth");
+                            gcp_config
+                        },
                     Err(err) => {
                         error!("Failed to authenticate with GCS: {}", err);
                         return Err(BenchmarkingOutputBuildError::GoogleCloudAuth(err.into()));
                     }
                 };
                 // Return the Client
+                info!("Returning GCS Client");
                 Ok(Self::GoogleCloudStorageCsv {
                     gcs_client: Client::new(gcp_config),
                 })

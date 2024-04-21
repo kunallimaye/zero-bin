@@ -1,5 +1,5 @@
 //! This module contains everything to prove multiple blocks.
-use std::time::Instant;
+use std::time::{Instant, SystemTime};
 
 use log::{debug, error, info, warn};
 use paladin::runtime::Runtime;
@@ -11,6 +11,7 @@ use crate::benchmarking::{
 use crate::fetch::{fetch, FetchError};
 use crate::input::{ProveBlocksInput, TerminateOn};
 use crate::proofout::{ProofOutput, ProofOutputBuildError, ProofOutputError};
+use chrono::{DateTime, Utc};
 
 //===========================================================================================
 // ManyProverError
@@ -57,7 +58,7 @@ pub async fn prove_blocks(
     }
 
     match input.forward_prev {
-        Some(true) => warn!("There are some issues with forward_prev = true"),
+        Some(true) => warn!("There are some issues with forward_prev = true, would recommend leaving it false"),
         Some(false) | None => (),
     }
 
@@ -238,7 +239,10 @@ pub async fn prove_blocks(
         //------------------------------------------------------------------------
 
         info!("Starting to prove block {}", cur_block_num);
+        // Instance will track duration, better specified for that
         let proof_start_instance = Instant::now();
+        // The stamp will signify the starting process of this proof.
+        let proof_start_stamp: DateTime<Utc> = SystemTime::now().into();
         let proof = match prover_input.prove(runtime, prev).await {
             Ok(proof) => proof,
             Err(err) => {
@@ -250,6 +254,7 @@ pub async fn prove_blocks(
             }
         };
         let proof_duration = proof_start_instance.elapsed();
+        let proof_end_stamp: DateTime<Utc> = SystemTime::now().into();
         info!(
             "Proved block {} in {} seconds",
             cur_block_num,
@@ -299,6 +304,7 @@ pub async fn prove_blocks(
         //------------------------------------------------------------------------
         // Recording the Benchmark
         //------------------------------------------------------------------------
+
         // If we are tracking benchmark statistics, produce the struct and
         // push it to the benchmark output vector.
         if let Some(benchmark_out) = &mut benchmark_out {
@@ -307,8 +313,10 @@ pub async fn prove_blocks(
                 n_txs,
                 fetch_duration,
                 proof_duration,
+                start_time: proof_start_stamp,
+                end_time: proof_end_stamp,
                 proof_out_duration: None,
-                gas_used: Some(cur_gas_used),
+                gas_used: cur_gas_used,
                 difficulty,
             };
             benchmark_out.push(benchmark_stats)
