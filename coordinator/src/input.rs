@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::benchmarking::BenchmarkOutputConfig;
 
 /// The means for terminating.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum TerminateOn {
     /// Terminate after `num_seconds` seconds after the start of proving blocks.
     ///
@@ -21,26 +21,17 @@ pub enum TerminateOn {
         /// The default value is false.
         include_straddling: Option<bool>,
     },
-    ElapsedProverTime {
-        /// The number of seconds spent proving before terminating
-        /// Does not include time for generating witnesses.
-        num_seconds: u64,
-        /// Whether or not we should record a block proof if the proof was
-        /// started but not completed before the elapsed time.
-        ///
-        /// The default value is false.
-        include_straddling: Option<bool>,
-    },
     /// Prove until the sum of gas of all the blocks we proved is equal to
     /// `until_gas_sum` amount of gas.
     BlockGasUsed {
         /// Sets the gas
         until_gas_sum: u64,
-    },
-    /// Terminate after proving `num_blocks` number of blocks
-    NumBlocks {
-        /// The number of blocks to be proved before terminating.
-        num_blocks: u64,
+        /// Whether or not we should record a block proof if the proof was
+        /// started before reaching the max cumulative gas of the original
+        /// blocks, but after this block will be over the maximum.
+        ///
+        /// The default value is false.
+        include_straddling: Option<bool>,
     },
     /// Terminate once proved the end block, given by the `block_number`
     /// (inclusive)
@@ -61,6 +52,25 @@ pub enum BlockSource {
     },
 }
 
+/// The [BlockConcurrencyMode] represents how we handle the block
+/// processing.  
+///
+/// In Sequential mode, we will never send more than
+/// one block at a time to the workers, however this may lead to
+/// reduced runtime due to unoccupied workers.
+///
+/// In concurrent mode, we will try to have at most `max_concurrent`
+/// blocks with their workloads currently distributed to the
+/// workers.
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy)]
+pub enum BlockConcurrencyMode {
+    #[default]
+    Sequential,
+    Parallel {
+        max_concurrent: u8,
+    },
+}
+
 use crate::proofout::ProofOutputMethod;
 
 /// The input for starting the many-blocks proving
@@ -78,6 +88,8 @@ pub struct ProveBlocksInput {
     pub terminate_on: Option<TerminateOn>,
     /// How we source the blocks.
     pub block_source: BlockSource,
+    /// The conccurency mode
+    pub block_concurrency: Option<BlockConcurrencyMode>,
     /// DEPRECATED
     pub check_gas: Option<bool>,
     /// Stores the output of the proofs. If not provided, no proofs will be
@@ -102,7 +114,6 @@ impl ProveBlocksInput {
             Some(TerminateOn::EndBlock { block_number }) => {
                 Some(((block_number - self.start_block_number) + 1) as usize)
             }
-            Some(TerminateOn::NumBlocks { num_blocks }) => Some((num_blocks + 1) as usize),
             _ => None,
         }
     }
