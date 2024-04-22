@@ -31,7 +31,7 @@ pub enum TerminateOn {
         /// blocks, but after this block will be over the maximum.
         ///
         /// The default value is false.
-        include_straddling: Option<bool>
+        include_straddling: Option<bool>,
     },
     /// Terminate once proved the end block, given by the `block_number`
     /// (inclusive)
@@ -52,21 +52,23 @@ pub enum BlockSource {
     },
 }
 
-/// The [BlockConcurrencyMode] represents how we handle the block 
+/// The [BlockConcurrencyMode] represents how we handle the block
 /// processing.  
-/// 
+///
 /// In Sequential mode, we will never send more than
 /// one block at a time to the workers, however this may lead to
 /// reduced runtime due to unoccupied workers.
-/// 
-/// In concurrent mode, we will try to have at most `max_concurrent` 
+///
+/// In concurrent mode, we will try to have at most `max_concurrent`
 /// blocks with their workloads currently distributed to the
 /// workers.
 #[derive(Debug, Default, Serialize, Deserialize, Clone, Copy)]
 pub enum BlockConcurrencyMode {
     #[default]
     Sequential,
-    Parallel{max_concurrent: u8},
+    Parallel {
+        max_concurrent: u8,
+    },
 }
 
 use crate::proofout::ProofOutputMethod;
@@ -111,7 +113,7 @@ impl ProveBlocksInput {
         match self.terminate_on {
             Some(TerminateOn::EndBlock { block_number }) => {
                 Some(((block_number - self.start_block_number) + 1) as usize)
-            },
+            }
             _ => None,
         }
     }

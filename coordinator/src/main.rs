@@ -180,22 +180,31 @@ async fn handle_post(
     // Try to make the prover
     let mut prover = match manyprover::ManyProver::new(input.0, arc_runtime).await {
         Ok(prover) => {
-            info!("Successfully instansiated proving mechanism (Request: {})", start_time);
+            info!(
+                "Successfully instansiated proving mechanism (Request: {})",
+                start_time
+            );
             prover
-        },
+        }
         // If there was an error, log it and return an InternalServerError so the user knows that
         // it will not be working at all.
         Err(err) => {
-            error!("Critical error occured while attempting to perform proofs ({}): {}", start_time, err);
+            error!(
+                "Critical error occured while attempting to perform proofs ({}): {}",
+                start_time, err
+            );
             return HttpResponse::InternalServerError();
-        },
+        }
     };
 
     // Start the prover in a new thread
     tokio::spawn(async move {
         match prover.prove_blocks().await {
             Ok(_) => info!("Completed request started (Request: {})", start_time),
-            Err(err) => error!("Critical error occured while attempting to perform proofs ({}): {}", start_time, err),
+            Err(err) => error!(
+                "Critical error occured while attempting to perform proofs ({}): {}",
+                start_time, err
+            ),
         }
     });
 

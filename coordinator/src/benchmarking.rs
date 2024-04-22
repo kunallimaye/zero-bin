@@ -3,11 +3,11 @@
 //! TODO: Switch to using the CSV trait, it'll probably be easier
 use std::{fs::create_dir_all, io::Write, path::PathBuf, thread::sleep, time::Duration};
 
+use chrono::{DateTime, Utc};
 use google_cloud_storage::{
     client::{Client, ClientConfig},
     http::objects::upload::{Media, UploadObjectRequest, UploadType},
 };
-use chrono::{DateTime, Utc};
 use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
 
@@ -23,8 +23,8 @@ pub struct BenchmarkingStats {
     /// The number of transactions in the block proved
     pub n_txs: u64,
     /// The cumulative transaction count.  This is the number of transactions
-    /// from this block and all blocks beforehand.  None implies data not available,
-    /// not 0.
+    /// from this block and all blocks beforehand.  None implies data not
+    /// available, not 0.
     pub cumulative_n_txs: Option<u64>,
     /// The duration fo time took to fetch [prover::ProverInput], stored as a
     /// [Duration].
@@ -32,16 +32,16 @@ pub struct BenchmarkingStats {
     /// The amount of time elapsed during the process of proving this block,
     /// stored as a [Duration]
     pub proof_duration: Duration,
-    /// The start time of the proof.  [BenchmarkingStats::proof_duration] is a 
+    /// The start time of the proof.  [BenchmarkingStats::proof_duration] is a
     /// more reliable value to use for the proof duration.  Timestamps measured
     /// in UTC.
     pub start_time: DateTime<Utc>,
-    /// The end time of the proof.  [BenchmarkingStats::proof_duration] is a 
+    /// The end time of the proof.  [BenchmarkingStats::proof_duration] is a
     /// more reliable value to use for the proof duration.  Timestamps measured
     /// in UTC.
     pub end_time: DateTime<Utc>,
-    /// The number of seconds elapsed from the first block in the benchmarking process
-    /// and the end of the current block being proven
+    /// The number of seconds elapsed from the first block in the benchmarking
+    /// process and the end of the current block being proven
     pub overall_elapsed_seconds: Option<u64>,
     /// The amount of time elapsed during the process of saving this block's
     /// proof to its output, stored as a [Duration]
@@ -81,14 +81,14 @@ impl BenchmarkingStats {
     fn unwrap_to_string<T: ToString>(item: Option<T>) -> String {
         match item {
             Some(item) => item.to_string(),
-            None => String::from("")
+            None => String::from(""),
         }
     }
 
     fn unwrap_duration_to_string(item: Option<Duration>) -> String {
         match item {
             Some(item) => item.as_secs_f64().to_string(),
-            None => String::from("")
+            None => String::from(""),
         }
     }
 
@@ -176,9 +176,9 @@ impl BenchmarkingOutputData {
                 // Produce the GCP Config
                 let gcp_config = match ClientConfig::default().with_auth().await {
                     Ok(gcp_config) => {
-                            info!("GCS ClientConfig generated with auth");
-                            gcp_config
-                        },
+                        info!("GCS ClientConfig generated with auth");
+                        gcp_config
+                    }
                     Err(err) => {
                         error!("Failed to authenticate with GCS: {}", err);
                         return Err(BenchmarkingOutputBuildError::GoogleCloudAuth(err.into()));

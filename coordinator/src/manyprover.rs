@@ -16,7 +16,6 @@ use crate::fetch::{fetch, FetchError};
 use crate::input::{BlockConcurrencyMode, ProveBlocksInput, TerminateOn};
 use crate::proofout::{ProofOutput, ProofOutputBuildError, ProofOutputError};
 
-
 //===========================================================================================
 // ManyProverError
 //===========================================================================================
@@ -209,13 +208,15 @@ impl ManyProver {
                     return Err(err);
                 }
             },
-            BlockConcurrencyMode::Parallel { max_concurrent: _ } => match self.prove_blocks_parallel().await {
-                Ok(()) => info!("Completed Parallel block proving"),
-                Err(err) => {
-                    error!("Failed to complete Parallel block proving: {}", err);
-                    return Err(err);
+            BlockConcurrencyMode::Parallel { max_concurrent: _ } => {
+                match self.prove_blocks_parallel().await {
+                    Ok(()) => info!("Completed Parallel block proving"),
+                    Err(err) => {
+                        error!("Failed to complete Parallel block proving: {}", err);
+                        return Err(err);
+                    }
                 }
-            },
+            }
         }
 
         Ok(())
@@ -510,7 +511,12 @@ impl ManyProver {
                                 benchmark_stats.cumulative_gas_used = Some(cumulative_block_gas);
                                 benchmark_stats.cumulative_n_txs = Some(cumulative_n_txs);
                                 benchmark_stats.proof_out_duration = proof_out_time;
-                                benchmark_stats.overall_elapsed_seconds = Some(benchmark_stats.end_time.signed_duration_since(total_start_stamp).num_seconds() as u64);
+                                benchmark_stats.overall_elapsed_seconds = Some(
+                                    benchmark_stats
+                                        .end_time
+                                        .signed_duration_since(total_start_stamp)
+                                        .num_seconds() as u64,
+                                );
                                 benchmark_out.push(benchmark_stats)
                             }
 
@@ -539,7 +545,6 @@ impl ManyProver {
                 Ok(()) => info!("Published the benchmark"),
                 Err(err) => {
                     error!("Failed to publish benchmark statistics: {}", err);
-
                 }
             }
         }
