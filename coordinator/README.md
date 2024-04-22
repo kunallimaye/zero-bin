@@ -58,6 +58,7 @@ The example below proves blocks [1,10] using the RPC function listed in ZeroBin,
 
 ```
 
+An example not recording the proofs, and posting the results to a google cloud storage bucket.
 
 ```json
 {
@@ -75,3 +76,40 @@ The example below proves blocks [1,10] using the RPC function listed in ZeroBin,
   }
 }
 ```
+
+In this example, we run the experiment for just one minute.  With `include_straddling` enabled, we
+will also save the final block we prove even if it is after the elapsed seconds, but will not 
+prove another block following that.
+
+```json
+{
+  "start_block_number": 1,
+  "checkpoint_block_number": 1,
+  "terminate_on": {
+    "ElapsedSeconds": {"num_seconds": 60, "include_straddling": true}
+  },
+  "block_source": {
+    "ZeroBinRpc": {"rpc_url": "http://35.208.84.178:8545/"}
+  },
+  "benchmark_output": {
+    "GoogleCloudStorageCsv": {"file_name": "test.csv", "bucket": "zkevm-csv"}
+  }
+}
+```
+
+```json
+{
+  "start_block_number": 1,
+  "checkpoint_block_number": 1,
+  "terminate_on": {
+    "BlockGasUsed": {"until_gas_sum": 30000000}
+  },
+  "block_source": {
+    "ZeroBinRpc": {"rpc_url": "http://35.208.84.178:8545/"}
+  },
+  "benchmark_output": {
+    "GoogleCloudStorageCsv": {"file_name": "test.csv", "bucket": "zkevm-csv"}
+  }
+}
+```
+

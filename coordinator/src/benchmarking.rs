@@ -22,6 +22,10 @@ pub struct BenchmarkingStats {
     pub block_number: u64,
     /// The number of transactions in the block proved
     pub n_txs: u64,
+    /// The cumulative transaction count.  This is the number of transactions
+    /// from this block and all blocks beforehand.  None implies data not available,
+    /// not 0.
+    pub cumulative_n_txs: Option<u64>,
     /// The duration fo time took to fetch [prover::ProverInput], stored as a
     /// [Duration].
     pub fetch_duration: Duration,
@@ -36,11 +40,17 @@ pub struct BenchmarkingStats {
     /// more reliable value to use for the proof duration.  Timestamps measured
     /// in UTC.
     pub end_time: DateTime<Utc>,
+    /// The number of seconds elapsed from the first block in the benchmarking process
+    /// and the end of the current block being proven
+    pub overall_elapsed_seconds: Option<u64>,
     /// The amount of time elapsed during the process of saving this block's
     /// proof to its output, stored as a [Duration]
     pub proof_out_duration: Option<Duration>,
     /// The gas used by the block we proved
     pub gas_used: u64,
+    /// The cumulative gas used by the block we proved.  None implies
+    /// not filled in, not 0.
+    pub cumulative_gas_used: Option<u64>,
     /// The difficulty of the block we proved
     pub difficulty: u64,
 }
@@ -49,7 +59,7 @@ impl BenchmarkingStats {
     /// Returns a header row
     pub fn header_row() -> String {
         String::from(
-            "block_number, number_txs, fetch_duration, proof_duration, start_time, end_time, gas_used, difficulty",
+            "block_number, number_txs, cumulative_number_txs, fetch_duration, proof_duration, start_time, end_time, overall_elapsed_time, proof_out_duration, gas_used, cumulative_gas_used, difficulty",
         )
     }
 
@@ -68,18 +78,35 @@ impl BenchmarkingStats {
         format!("{}\n{}", Self::header_row(), Self::vec_to_string(vector))
     }
 
+    fn unwrap_to_string<T: ToString>(item: Option<T>) -> String {
+        match item {
+            Some(item) => item.to_string(),
+            None => String::from("")
+        }
+    }
+
+    fn unwrap_duration_to_string(item: Option<Duration>) -> String {
+        match item {
+            Some(item) => item.as_secs_f64().to_string(),
+            None => String::from("")
+        }
+    }
+
     /// Turns [BenchmarkingStats] into a CSV Row
     pub fn as_csv_row(&self) -> String {
-        // format.
         format!(
-            "{}, {}, {}, {}, {}, {}, {}, {}",
+            "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
             self.block_number,
             self.n_txs,
+            Self::unwrap_to_string(self.cumulative_n_txs),
             self.fetch_duration.as_secs_f64(),
             self.proof_duration.as_secs_f64(),
             self.start_time.format("%d-%m-%Y %H:%M:%S"),
             self.end_time.format("%d-%m-%Y %H:%M:%S"),
+            Self::unwrap_to_string(self.overall_elapsed_seconds),
+            Self::unwrap_duration_to_string(self.proof_out_duration),
             self.gas_used,
+            Self::unwrap_to_string(self.cumulative_gas_used),
             self.difficulty
         )
     }

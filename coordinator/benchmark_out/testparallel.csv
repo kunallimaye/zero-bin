@@ -1,0 +1,4 @@
+block_number, number_txs, cumulative_number_txs, fetch_duration, proof_duration, start_time, end_time, overall_elapsed_time, proof_out_duration, gas_used, cumulative_gas_used, difficulty
+7, 12, 12, 0.354999525, 602.796564585, 22-04-2024 22:11:38, 22-04-2024 22:21:40, , , 252000, 252000, 0
+8, 12, 24, 0.240492353, 605.2606692, 22-04-2024 22:11:38, 22-04-2024 22:21:43, , , 252000, 504000, 0
+9, 12, 36, 0.273154329, 299.283522421, 22-04-2024 22:21:41, 22-04-2024 22:26:40, , , 252000, 756000, 0
