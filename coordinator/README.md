@@ -78,7 +78,7 @@ An example not recording the proofs, and posting the results to a google cloud s
 ```
 
 In this example, we run the experiment for just one minute.  With `include_straddling` enabled, we
-will also save the final block we prove even if it is after the elapsed seconds, but will not 
+will also save the final block we prove even if it is after the elapsed seconds, but will not
 prove another block following that.
 
 ```json
@@ -107,9 +107,11 @@ prove another block following that.
   "block_source": {
     "ZeroBinRpc": {"rpc_url": "http://35.208.84.178:8545/"}
   },
+  "block_concurrency": {
+    "Parallel": {"max_concurrent": 20}
+    },
   "benchmark_output": {
     "GoogleCloudStorageCsv": {"file_name": "test.csv", "bucket": "zkevm-csv"}
   }
 }
 ```
-
