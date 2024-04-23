@@ -98,10 +98,10 @@ hull:
                   value: info
               resources:
                 limits:
-                  cpu: 4
+                  cpu: 90
                   memory: 32Gi
                 requests:
-                  cpu: 4
+                  cpu: 90
                   memory: 32Gi
     service:
       leader:
