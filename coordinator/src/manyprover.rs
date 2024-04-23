@@ -1,4 +1,4 @@
-//! This module contains everything to prove multiple blocks.
+//! This module contains everything to prove multiple blocks in either parallel or sequential.
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 
