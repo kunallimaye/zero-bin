@@ -64,7 +64,6 @@ impl std::error::Error for ManyProverBuildError {}
 //===========================================================================================
 
 /// The [ManyProver] struct maintains the state and necessary information
-#[derive(Debug)]
 pub struct ManyProver {
     /// The original request
     pub input_request: ProveBlocksInput,
