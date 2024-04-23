@@ -112,6 +112,7 @@ hull:
             targetPort: 8080
     horizontalpodautoscaler:
       worker:
+        enabled: false
         scaleTargetRef:
           apiVersion: apps/v1
           kind: Deployment
@@ -122,9 +123,28 @@ hull:
           scaleDown:
             stabilizationWindowSeconds: 300
         metrics:
-        - type: jobs.batch
+        - type: Resource
           resource:
             name: rabbitmq_queue_messages_ready_rate
             target:
               type: AverageValue
               averageValue: 3
+    customresource:
+      worker-scaled-obj:
+        enabled: false
+        staticName: true
+        apiVersion: keda.sh/v1alpha1
+        kind: ScaledObject
+        spec:
+          minReplicaCount: 10
+          maxReplicaCount: 20
+          scaleTargetRef:
+            name: zero-bin-worker
+          triggers:
+          - type: prometheus
+            metricType: Value
+            metadata:
+              serverAddress: http://promstack-prometheus-server.monitoring.svc.cluster.local
+              query: rabbitmq_queue_messages_ready
+              threshold: "5"
+
