@@ -27,6 +27,7 @@ pub mod psm;
 
 pub const SERVER_ADDR_ENVKEY: &str = "SERVER_ADDR";
 pub const DFLT_SERVER_ADDR: &str = "0.0.0.0:8080";
+pub const NUM_SERVER_WORKERS: usize = 4;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -140,6 +141,7 @@ async fn main() -> Result<()> {
             .service(web::resource("/").route(web::post().to(handle_post)))
             .route("/health", web::get().to(handle_health))
     })
+    .workers(NUM_SERVER_WORKERS)
     .bind(server_addr)
     {
         Ok(item) => item,
