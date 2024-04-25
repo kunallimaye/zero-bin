@@ -306,6 +306,10 @@ impl ManyProver {
                     block_number: block_num,
                     n_txs: n_txs as u64,
                     cumulative_n_txs: None,
+                    avg_tx_proof_duration: match n_txs {
+                        0 => None,
+                        n_txs => Some(n_txs as f64 / proof_duration.as_secs_f64())
+                    },
                     fetch_duration,
                     proof_duration,
                     start_time: proof_start_stamp,
@@ -805,6 +809,10 @@ impl ManyProver {
                     block_number: cur_block_num,
                     n_txs,
                     cumulative_n_txs: Some(cumulative_n_txs),
+                    avg_tx_proof_duration: match n_txs {
+                        0 => None,
+                        n_txs => Some(n_txs as f64 / proof_duration.as_secs_f64())
+                    },
                     fetch_duration,
                     proof_duration,
                     start_time: proof_start_stamp,

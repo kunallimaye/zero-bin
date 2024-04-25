@@ -115,3 +115,22 @@ prove another block following that.
   }
 }
 ```
+
+```json
+{
+  "start_block_number": 1,
+  "checkpoint_block_number": 1,
+  "terminate_on": {
+    "ElapsedSeconds": {"num_seconds": 60, "include_straddling": true}
+  },
+  "block_source": {
+    "ZeroBinRpc": {"rpc_url": "http://35.208.84.178:8545/"}
+  },
+  "block_concurrency": {
+    "Parallel": {"max_concurrent": 5}
+    },
+  "benchmark_output": {
+    "GoogleCloudStorageCsv": {"file_name": "2hr_parallel.csv", "bucket": "zkevm-csv"}
+  }
+}
+```
