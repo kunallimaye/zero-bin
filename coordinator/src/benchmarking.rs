@@ -52,6 +52,8 @@ pub struct BenchmarkingStats {
     pub proof_out_duration: Option<Duration>,
     /// The gas used by the block we proved
     pub gas_used: u64,
+    /// The gas used per transaction in the block in the original chain
+    pub gas_used_per_tx: Vec<u64>,
     /// The cumulative gas used by the block we proved.  None implies
     /// not filled in, not 0.
     pub cumulative_gas_used: Option<u64>,
@@ -63,7 +65,7 @@ impl BenchmarkingStats {
     /// Returns a header row
     pub fn header_row() -> String {
         String::from(
-            "block_number, number_txs, cumulative_number_txs, avg_tx_proof_duration, fetch_duration, proof_duration, start_time, end_time, overall_elapsed_time, proof_out_duration, gas_used, cumulative_gas_used, difficulty",
+            "block_number, number_txs, cumulative_number_txs, avg_tx_proof_duration, fetch_duration, proof_duration, start_time, end_time, overall_elapsed_time, proof_out_duration, gas_used, gas_used_per_tx, cumulative_gas_used, difficulty",
         )
     }
 
@@ -97,9 +99,10 @@ impl BenchmarkingStats {
     }
 
     /// Turns [BenchmarkingStats] into a CSV Row
+    #[allow(clippy::format_in_format_args)]
     pub fn as_csv_row(&self) -> String {
         format!(
-            "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+            "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, \"{}\", {}, {}",
             self.block_number,
             self.n_txs,
             Self::unwrap_to_string(self.cumulative_n_txs),
@@ -111,8 +114,9 @@ impl BenchmarkingStats {
             Self::unwrap_to_string(self.overall_elapsed_seconds),
             Self::unwrap_duration_to_string(self.proof_out_duration),
             self.gas_used,
+            self.gas_used_per_tx.iter().map(|gas| gas.to_string()).collect::<Vec<String>>().join(";"),
             Self::unwrap_to_string(self.cumulative_gas_used),
-            self.difficulty
+            self.difficulty,
         )
     }
 }
