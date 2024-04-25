@@ -114,7 +114,11 @@ impl BenchmarkingStats {
             Self::unwrap_to_string(self.overall_elapsed_seconds),
             Self::unwrap_duration_to_string(self.proof_out_duration),
             self.gas_used,
-            self.gas_used_per_tx.iter().map(|gas| gas.to_string()).collect::<Vec<String>>().join(";"),
+            self.gas_used_per_tx
+                .iter()
+                .map(|gas| gas.to_string())
+                .collect::<Vec<String>>()
+                .join(";"),
             Self::unwrap_to_string(self.cumulative_gas_used),
             self.difficulty,
         )
