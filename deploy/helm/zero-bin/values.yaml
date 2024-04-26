@@ -79,7 +79,7 @@ hull:
                 initialDelaySeconds: 10
                 periodSeconds: 5
       worker:
-        replicas: 30
+        replicas: 1
         pod:
           containers:
             worker:
@@ -98,10 +98,10 @@ hull:
                   value: info
               resources:
                 limits:
-                  cpu: 25
+                  cpu: 5
                   memory: 32Gi
                 requests:
-                  cpu: 25
+                  cpu: 5
                   memory: 32Gi
     service:
       leader:
