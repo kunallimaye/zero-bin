@@ -110,6 +110,21 @@ hull:
           http:
             port: 8080
             targetPort: 8080
+    poddisruptionbudget:
+      leader:
+        minAvailable: 1
+        selector:
+          matchLabels:
+            app.kubernetes.io/component: leader
+            app.kubernetes.io/instance: zero-bin
+            app.kubernetes.io/name: zero-bin
+      worker:
+        maxUnavailable: 1
+        selector:
+          matchLabels:
+            app.kubernetes.io/component: worker
+            app.kubernetes.io/instance: zero-bin
+            app.kubernetes.io/name: zero-bin
     horizontalpodautoscaler:
       worker:
         enabled: false
