@@ -262,6 +262,13 @@ impl ManyProver {
             // EXTRACTING KEY INFO
             // Number txs
             let n_txs = prover_input.block_trace.txn_info.len();
+            // Txs Gas Used
+            let gas_used_txs: Vec<u64> = prover_input
+                .block_trace
+                .txn_info
+                .iter()
+                .map(|txn_info| txn_info.meta.gas_used)
+                .collect();
             // Gas used in original block
             let gas_used = match u64::try_from(prover_input.other_data.b_data.b_meta.block_gas_used)
             {
@@ -306,6 +313,10 @@ impl ManyProver {
                     block_number: block_num,
                     n_txs: n_txs as u64,
                     cumulative_n_txs: None,
+                    avg_tx_proof_duration: match n_txs {
+                        0 => None,
+                        n_txs => Some(n_txs as f64 / proof_duration.as_secs_f64()),
+                    },
                     fetch_duration,
                     proof_duration,
                     start_time: proof_start_stamp,
@@ -313,6 +324,7 @@ impl ManyProver {
                     overall_elapsed_seconds: None,
                     proof_out_duration: None,
                     gas_used,
+                    gas_used_per_tx: gas_used_txs,
                     cumulative_gas_used: None,
                     difficulty,
                 },
@@ -662,6 +674,12 @@ impl ManyProver {
 
             // Retrieve the number of transactions from this block.
             let n_txs = prover_input.block_trace.txn_info.len() as u64;
+            let gas_used_txs: Vec<u64> = prover_input
+                .block_trace
+                .txn_info
+                .iter()
+                .map(|txn_info| txn_info.meta.gas_used)
+                .collect();
             cumulative_n_txs += n_txs;
             // Retrieve the cur block's gas used
             let cur_gas_used =
@@ -805,6 +823,10 @@ impl ManyProver {
                     block_number: cur_block_num,
                     n_txs,
                     cumulative_n_txs: Some(cumulative_n_txs),
+                    avg_tx_proof_duration: match n_txs {
+                        0 => None,
+                        n_txs => Some(n_txs as f64 / proof_duration.as_secs_f64()),
+                    },
                     fetch_duration,
                     proof_duration,
                     start_time: proof_start_stamp,
@@ -816,6 +838,7 @@ impl ManyProver {
                     ),
                     proof_out_duration: proof_out_time,
                     gas_used: cur_gas_used,
+                    gas_used_per_tx: gas_used_txs,
                     cumulative_gas_used: Some(cumulative_block_gas),
                     difficulty,
                 };
