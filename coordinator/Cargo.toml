@@ -8,6 +8,10 @@ authors.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
+[profile.release]
+codegen-units = 1
+lto = true
+
 [dependencies]
 
 # Local dependencies
