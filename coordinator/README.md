@@ -108,7 +108,7 @@ prove another block following that.
     "ZeroBinRpc": {"rpc_url": "http://35.208.84.178:8545/"}
   },
   "block_concurrency": {
-    "Parallel": {"max_concurrent": 20}
+    "Parallel": {"max_concurrent": 2}
     },
   "benchmark_output": {
     "GoogleCloudStorageCsv": {"file_name": "test.csv", "bucket": "zkevm-csv"}
