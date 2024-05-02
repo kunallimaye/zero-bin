@@ -14,13 +14,13 @@ pub enum TerminateOn {
     ElapsedSeconds {
         /// The number of seconds needed to elapse since the beginning of the
         /// proving process before terminating.
-        num_seconds: u64
+        num_seconds: u64,
     },
     /// Prove until the sum of gas of all the blocks we proved is equal to
     /// `until_gas_sum` amount of gas.
     BlockGasUsed {
         /// Sets the gas
-        until_gas_sum: u64
+        until_gas_sum: u64,
     },
     /// Terminate once proved the end block, given by the `block_number`
     /// (inclusive)
@@ -57,28 +57,32 @@ pub enum BlockConcurrencyMode {
     Sequential,
     Parallel {
         max_concurrent: u8,
-        /// Represents the maximum number of blocks we can do, if not provided will 
-        /// have to pick a number on its own
+        /// Represents the maximum number of blocks we can do, if not provided
+        /// will have to pick a number on its own
         max_blocks: Option<u64>,
     },
 }
 
 impl BlockConcurrencyMode {
-
     pub fn max_concurrent(&self) -> Option<u8> {
         match self {
-            BlockConcurrencyMode::Parallel { max_concurrent, max_blocks:_ } => Some(*max_concurrent),
+            BlockConcurrencyMode::Parallel {
+                max_concurrent,
+                max_blocks: _,
+            } => Some(*max_concurrent),
             _ => None,
-        } 
+        }
     }
 
     pub fn max_blocks(&self) -> Option<u64> {
         match self {
             Self::Sequential => None,
-            Self::Parallel { max_concurrent:_ , max_blocks } => Some(max_blocks.unwrap_or(1000))
+            Self::Parallel {
+                max_concurrent: _,
+                max_blocks,
+            } => Some(max_blocks.unwrap_or(1000)),
         }
     }
-
 }
 
 use crate::proofout::ProofOutputMethod;
@@ -115,7 +119,6 @@ pub struct ProveBlocksInput {
 }
 
 impl ProveBlocksInput {
-
     pub fn get_expected_number_proofs(&self) -> Option<u64> {
         match self.terminate_on {
             Some(TerminateOn::EndBlock { block_number }) => {

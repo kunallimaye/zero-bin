@@ -1,7 +1,10 @@
 //! This module contains everything to prove multiple blocks in either parallel
 //! or sequential.
 
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use std::time::{Instant, SystemTime};
 
 use async_channel;
@@ -573,7 +576,7 @@ impl ManyProver {
                             num_seconds, elapsed_seconds
                         );
                     }
-                },
+                }
                 Some(TerminateOn::BlockGasUsed { until_gas_sum }) => {
                     if &cumulative_block_gas >= until_gas_sum {
                         info!(

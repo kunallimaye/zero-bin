@@ -15,11 +15,11 @@ pub fn load_psm_from_env() -> ProverStateManager {
         Ok(tls) if tls.contains("ON_DEMAND") => {
             info!("Loaded OnDemand TabeLoadStrategy from .env");
             Some(TableLoadStrategy::OnDemand)
-        },
+        }
         Ok(tls) if tls.contains("MONOLITHIC") => {
             info!("Loaded Monolithic TabeLoadStrategy from .env");
             Some(TableLoadStrategy::Monolithic)
-        },
+        }
         Ok(tls) => {
             error!("Unknown Table Load Strategy: {}", tls);
             panic!("Unknown Table Load Strategy: {}", tls);
@@ -38,12 +38,12 @@ pub fn load_psm_from_env() -> ProverStateManager {
         Ok(persistence) if persistence.contains("NONE") => {
             info!("Loaded `None` CircuitPersistence from .env");
             CircuitPersistence::None
-        },
+        }
         Ok(persistence) if persistence.contains("DISK") => match tbl_load_strat {
             Some(tbl_load_strat) => {
                 info!("Loaded `Disk` CircuitPersistence from .env");
                 CircuitPersistence::Disk(tbl_load_strat)
-            },
+            }
             None => {
                 warn!("Table Load Strategy not specified, using default");
                 CircuitPersistence::Disk(TableLoadStrategy::default())
