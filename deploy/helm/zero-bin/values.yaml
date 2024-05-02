@@ -78,6 +78,11 @@ hull:
                   port: 8080
                 initialDelaySeconds: 10
                 periodSeconds: 5
+          tolerations:
+            - key: "workload"
+              operator: "Equal"
+              value: "zk"
+              effect: "NoSchedule"
       worker:
         replicas: 1
         pod:
@@ -103,6 +108,11 @@ hull:
                 requests:
                   cpu: 5
                   memory: 32Gi
+          tolerations:
+            - key: "workload"
+              operator: "Equal"
+              value: "zk"
+              effect: "NoSchedule"
     service:
       leader:
         type: LoadBalancer
@@ -110,6 +120,21 @@ hull:
           http:
             port: 8080
             targetPort: 8080
+    poddisruptionbudget:
+      leader:
+        minAvailable: 1
+        selector:
+          matchLabels:
+            app.kubernetes.io/component: leader
+            app.kubernetes.io/instance: zero-bin
+            app.kubernetes.io/name: zero-bin
+      worker:
+        maxUnavailable: 1
+        selector:
+          matchLabels:
+            app.kubernetes.io/component: worker
+            app.kubernetes.io/instance: zero-bin
+            app.kubernetes.io/name: zero-bin
     horizontalpodautoscaler:
       worker:
         enabled: false
