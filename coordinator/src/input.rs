@@ -14,24 +14,13 @@ pub enum TerminateOn {
     ElapsedSeconds {
         /// The number of seconds needed to elapse since the beginning of the
         /// proving process before terminating.
-        num_seconds: u64,
-        /// Whether or not we should record a block proof if the proof was
-        /// started but not completed before the elapsed time.
-        ///
-        /// The default value is false.
-        include_straddling: Option<bool>,
+        num_seconds: u64
     },
     /// Prove until the sum of gas of all the blocks we proved is equal to
     /// `until_gas_sum` amount of gas.
     BlockGasUsed {
         /// Sets the gas
-        until_gas_sum: u64,
-        /// Whether or not we should record a block proof if the proof was
-        /// started before reaching the max cumulative gas of the original
-        /// blocks, but after this block will be over the maximum.
-        ///
-        /// The default value is false.
-        include_straddling: Option<bool>,
+        until_gas_sum: u64
     },
     /// Terminate once proved the end block, given by the `block_number`
     /// (inclusive)
@@ -68,7 +57,28 @@ pub enum BlockConcurrencyMode {
     Sequential,
     Parallel {
         max_concurrent: u8,
+        /// Represents the maximum number of blocks we can do, if not provided will 
+        /// have to pick a number on its own
+        max_blocks: Option<u64>,
     },
+}
+
+impl BlockConcurrencyMode {
+
+    pub fn max_concurrent(&self) -> Option<u8> {
+        match self {
+            BlockConcurrencyMode::Parallel { max_concurrent, max_blocks:_ } => Some(*max_concurrent),
+            _ => None,
+        } 
+    }
+
+    pub fn max_blocks(&self) -> Option<u64> {
+        match self {
+            Self::Sequential => None,
+            Self::Parallel { max_concurrent:_ , max_blocks } => Some(max_blocks.unwrap_or(1000))
+        }
+    }
+
 }
 
 use crate::proofout::ProofOutputMethod;
@@ -105,16 +115,24 @@ pub struct ProveBlocksInput {
 }
 
 impl ProveBlocksInput {
+
+    pub fn get_expected_number_proofs(&self) -> Option<u64> {
+        match self.terminate_on {
+            Some(TerminateOn::EndBlock { block_number }) => {
+                Some((block_number - self.start_block_number) + 1)
+            }
+            _ => None,
+        }
+    }
+
     /// Returns the estimated number of proofs that will be generated.
     /// If unable to produce an estimate, returns [None]
     ///
     /// This is largely based on the termination condition ([TerminateOn])
-    pub fn estimate_expected_number_proofs(&self) -> Option<usize> {
-        match self.terminate_on {
-            Some(TerminateOn::EndBlock { block_number }) => {
-                Some(((block_number - self.start_block_number) + 1) as usize)
-            }
-            _ => None,
+    pub fn estimate_expected_number_proofs(&self) -> Option<u64> {
+        match self.get_expected_number_proofs() {
+            Some(expected) => Some(expected),
+            None => None
         }
     }
 

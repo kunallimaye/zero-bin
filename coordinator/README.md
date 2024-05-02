@@ -77,16 +77,14 @@ An example not recording the proofs, and posting the results to a google cloud s
 }
 ```
 
-In this example, we run the experiment for just one minute.  With `include_straddling` enabled, we
-will also save the final block we prove even if it is after the elapsed seconds, but will not
-prove another block following that.
+In this example, we run the experiment for just one minute.
 
 ```json
 {
   "start_block_number": 1,
   "checkpoint_block_number": 1,
   "terminate_on": {
-    "ElapsedSeconds": {"num_seconds": 60, "include_straddling": true}
+    "ElapsedSeconds": {"num_seconds": 60}
   },
   "block_source": {
     "ZeroBinRpc": {"rpc_url": "http://35.208.84.178:8545/"}
@@ -121,7 +119,7 @@ prove another block following that.
   "start_block_number": 1,
   "checkpoint_block_number": 1,
   "terminate_on": {
-    "ElapsedSeconds": {"num_seconds": 60, "include_straddling": true}
+    "ElapsedSeconds": {"num_seconds": 60}
   },
   "block_source": {
     "ZeroBinRpc": {"rpc_url": "http://35.208.84.178:8545/"}

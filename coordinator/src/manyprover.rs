@@ -1,8 +1,10 @@
 //! This module contains everything to prove multiple blocks in either parallel
 //! or sequential.
-use std::sync::Arc;
+
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::time::{Instant, SystemTime};
 
+use async_channel;
 use chrono::{DateTime, Utc};
 use log::{debug, error, info, warn};
 use paladin::runtime::Runtime;
@@ -28,6 +30,7 @@ pub enum ManyProverError {
     ProofOutError(ProofOutputError),
     UnsupportedTerminationCondition(TerminateOn),
     ParallelJoinError(JoinError),
+    FailedToSendTask(u64),
 }
 
 impl std::fmt::Display for ManyProverError {
@@ -105,8 +108,10 @@ impl ManyProver {
                 // Since forwarding previous block seems to cause issues currently and it only
                 // really matters to provide aggregated results, we will not support it for
                 // parallel execution (may change later)
-                if let Some(BlockConcurrencyMode::Parallel { max_concurrent: _ }) =
-                    input.block_concurrency
+                if let Some(BlockConcurrencyMode::Parallel {
+                    max_concurrent: _,
+                    max_blocks: _,
+                }) = input.block_concurrency
                 {
                     return Err(ManyProverBuildError::InvalidConfiguration(String::from(
                         "Forwarding proofs with parallel not supported",
@@ -209,15 +214,16 @@ impl ManyProver {
                     return Err(err);
                 }
             },
-            BlockConcurrencyMode::Parallel { max_concurrent: _ } => {
-                match self.prove_blocks_parallel().await {
-                    Ok(()) => info!("Completed Parallel block proving"),
-                    Err(err) => {
-                        error!("Failed to complete Parallel block proving: {}", err);
-                        return Err(err);
-                    }
+            BlockConcurrencyMode::Parallel {
+                max_concurrent: _,
+                max_blocks: _,
+            } => match self.prove_blocks_parallel().await {
+                Ok(()) => info!("Completed Parallel block proving"),
+                Err(err) => {
+                    error!("Failed to complete Parallel block proving: {}", err);
+                    return Err(err);
                 }
-            }
+            },
         }
 
         Ok(())
@@ -237,12 +243,20 @@ impl ManyProver {
             proof: GeneratedBlockProof,
         }
 
-        /// Function that proves a block
-        async fn prove_block(
+        struct ProveBlockTaskInput {
             input: Arc<ProveBlocksInput>,
             runtime: Arc<Runtime>,
             block_num: u64,
+        }
+
+        /// Function that proves a block
+        async fn prove_block(
+            prove_block_task_input: ProveBlockTaskInput,
         ) -> Result<ParallelBlockProof, ManyProverError> {
+            let input = prove_block_task_input.input;
+            let runtime = prove_block_task_input.runtime;
+            let block_num = prove_block_task_input.block_num;
+
             // FETCHING
             debug!("Attempting to fetch block {}", block_num);
             let fetch_start_instance = Instant::now();
@@ -346,213 +360,247 @@ impl ManyProver {
         let mut cumulative_block_gas: u64 = 0;
 
         let parallel_cnt = match self.block_conccurency() {
-            BlockConcurrencyMode::Parallel { max_concurrent } => max_concurrent,
+            BlockConcurrencyMode::Parallel {
+                max_concurrent,
+                max_blocks: _,
+            } => max_concurrent,
             BlockConcurrencyMode::Sequential => {
                 unreachable!("Started parallel execution, however input was set to sequential")
             }
         };
 
-        let mut cur_block_num = self.starting_block();
+        // create the async channel (the work queue)
+        // the work queue will contain the proof inputs
+        let (task_sender, task_receiver) = async_channel::unbounded::<ProveBlockTaskInput>();
 
-        let mut handles = std::collections::VecDeque::with_capacity(parallel_cnt as usize);
+        let (result_sender, result_receiver) =
+            async_channel::unbounded::<Result<ParallelBlockProof, ManyProverError>>();
 
-        let total_timer = Instant::now();
-        let total_start_stamp: DateTime<Utc> = SystemTime::now().into();
+        // Starting flag
+        let start_working = Arc::new(AtomicBool::new(false));
 
-        let mut no_new_blocks: bool = false;
+        /// the worker continually pulls tasks from the task_receiver, performs
+        /// the proof, and then sends results back to the master thread using
+        /// result_sender.
+        async fn pull_task_and_do_it(
+            start_working: Arc<AtomicBool>,
+            task_receiver: async_channel::Receiver<ProveBlockTaskInput>,
+            result_sender: async_channel::Sender<Result<ParallelBlockProof, ManyProverError>>,
+        ) {
+            // stall the thread until the timer begins
+            while !start_working.load(Ordering::SeqCst) {}
 
-        loop {
-            // If NOT no new blocks, we can evaluate if we should even add more blocks
-            if !no_new_blocks {
-                match self.terminate_on() {
-                    Some(TerminateOn::ElapsedSeconds {
-                        num_seconds,
-                        include_straddling: _,
-                    }) => {
-                        if total_timer.elapsed().as_secs() >= *num_seconds {
-                            info!("Elapsed the number of seconds allowed, will not allow any new blocks");
-                            no_new_blocks = true;
-                        }
+            while start_working.load(Ordering::SeqCst) {
+                let proof_task: ProveBlockTaskInput = match task_receiver.recv().await {
+                    Ok(rec_i) => rec_i,
+                    Err(_) => {
+                        info!("Task queue closed. Ending thread...");
+                        return;
                     }
-                    Some(TerminateOn::EndBlock { block_number }) => {
-                        if cur_block_num >= *block_number {
-                            no_new_blocks = true;
-                        }
-                    }
-                    Some(_) | None => (),
-                }
-            }
+                };
 
-            // If active count is less than parallel count (and we have not reached
-            // no_new_blocks, a flag enabled by the termination conditions once
-            // they have been reached), go ahead and send in a new task
-            //
-            // Otherwise, we will go ahead and wait for the next block to be completed and
-            // handle that.
-            if (handles.len() < parallel_cnt as usize) && !no_new_blocks {
-                info!("Creating a new task for block {}", cur_block_num);
-
-                let arc_input = Arc::new(self.input_request.clone());
-                let runtime_clone = self.runtime.clone();
-
-                handles.push_back(tokio::spawn(async move {
-                    prove_block(arc_input, runtime_clone, cur_block_num).await
-                }));
-
-                cur_block_num += 1;
-            } else {
-                let mut break_after = false;
-                info!("Waiting for a block to be finalized");
-                if let Some(front) = handles.pop_front() {
-                    match front.await {
-                        // In the event that we were successful, we handle this block's benchmark
-                        // stats gathered and the proof.
-                        //
-                        // Here we finalize the processing, including recording benchmarks, updating
-                        // cumulative values, outputting the proofs, etc.
-                        //
-                        // There's also the chance that we may decide to terminate at this point.
-                        // If that is the case, we may record this block
-                        // depending on if `include_straddling` is enabled, and then we will
-                        // break the loop.
-                        Ok(Ok(ParallelBlockProof {
-                            benchmark_stats,
-                            proof,
-                        })) => {
-                            // Extract the block number
-                            let block_num = proof.b_height;
-                            // Increment the cumulative results
-                            cumulative_n_txs += benchmark_stats.n_txs;
-                            cumulative_block_gas += benchmark_stats.gas_used;
-
-                            //-------------------------------------------------------------------------------------------
-                            // Check terminate
-                            //-------------------------------------------------------------------------------------------
-
-                            match self.terminate_on() {
-                                Some(TerminateOn::BlockGasUsed {
-                                    until_gas_sum,
-                                    include_straddling,
-                                }) => match (until_gas_sum, include_straddling) {
-                                    (ugs, Some(true)) if *ugs <= cumulative_block_gas => {
-                                        info!(
-                                            "Block {} will exceed the amount of gas allocated",
-                                            block_num
-                                        );
-                                        break_after = true;
-                                        no_new_blocks = true;
-                                    }
-                                    (ugs, None | Some(false)) if *ugs <= cumulative_block_gas => {
-                                        info!("Ignoring block {}, it exceeds the gas amount allocated", block_num);
-                                        break;
-                                    }
-                                    (ugs, _) => {
-                                        info!(
-                                            "{}/{} gas accumulated ({}%)",
-                                            cumulative_block_gas,
-                                            ugs,
-                                            (cumulative_block_gas as f64 / (*ugs) as f64)
-                                        )
-                                    }
-                                },
-                                Some(TerminateOn::ElapsedSeconds {
-                                    num_seconds,
-                                    include_straddling,
-                                }) => {
-                                    match (
-                                        benchmark_stats
-                                            .end_time
-                                            .signed_duration_since(total_start_stamp)
-                                            .num_seconds(),
-                                        include_straddling,
-                                    ) {
-                                        (secs, Some(true)) if secs as u64 > (*num_seconds) => {
-                                            info!("Exceeded number of seconds alloted, including straddling block {}", block_num);
-                                            break_after = true;
-                                            no_new_blocks = true;
-                                        }
-                                        (secs, Some(false) | None)
-                                            if secs as u64 > (*num_seconds) =>
-                                        {
-                                            info!("Exceede the time alloted, ignoring straddling block {}", block_num);
-                                            break;
-                                        }
-                                        (secs, _) => info!(
-                                            "{}/{} time accumulated ({}%)",
-                                            secs,
-                                            num_seconds,
-                                            (secs as f64 / (*num_seconds as f64))
-                                        ),
-                                    }
-                                }
-                                Some(_) => (),
-                                None => (),
-                            }
-
-                            //-------------------------------------------------------------------------------------------
-                            // Proof out
-                            //-------------------------------------------------------------------------------------------
-
-                            let proof_out_time: Option<std::time::Duration> = match &self.proof_out
-                            {
-                                Some(proof_out) => {
-                                    let proof_out_start = Instant::now();
-                                    match proof_out.write(&proof) {
-                                        Ok(_) => {
-                                            info!("Successfully wrote proof");
-                                            Some(proof_out_start.elapsed())
-                                        }
-                                        Err(err) => {
-                                            error!("Failed to write proof");
-                                            return Err(ManyProverError::ProofOutError(err));
-                                        }
-                                    }
-                                }
-                                None => None,
-                            };
-
-                            //-------------------------------------------------------------------------------------------
-                            // Benchmark Out
-                            //-------------------------------------------------------------------------------------------
-
-                            // If we are tracking benchmark statistics, add the cumulative values
-                            // and then add it to the benchmark out
-                            if let Some(benchmark_out) = &mut self.benchmark_out {
-                                // Make the received benchmark statistics mutable
-                                let mut benchmark_stats = benchmark_stats;
-                                // Add to the cumulative counts
-                                benchmark_stats.cumulative_gas_used = Some(cumulative_block_gas);
-                                benchmark_stats.cumulative_n_txs = Some(cumulative_n_txs);
-                                benchmark_stats.proof_out_duration = proof_out_time;
-                                benchmark_stats.overall_elapsed_seconds = Some(
-                                    benchmark_stats
-                                        .end_time
-                                        .signed_duration_since(total_start_stamp)
-                                        .num_seconds() as u64,
-                                );
-                                benchmark_out.push(benchmark_stats)
-                            }
-
-                            if break_after {
-                                break;
-                            }
-                        }
-                        Ok(Err(err)) => {
-                            error!("Error when proving block: {}", err);
-                            return Err(err);
-                        }
-                        Err(err) => {
-                            error!("Error when retrieving result for a block: {}", err);
-                            return Err(ManyProverError::ParallelJoinError(err));
-                        }
-                    }
-                } else {
-                    info!("No more blocks were placed in the queue, terminating.");
-                    break;
+                let result = prove_block(proof_task).await;
+                match result_sender.send(result).await {
+                    Ok(_) => info!("Sent results for block"),
+                    Err(err) => panic!("Critical error with Result Sender Channel: {}", err),
                 }
             }
         }
 
+        // spawn `parallel_cnt` long-lived taskees (threads dedicated to proving a
+        // block)
+        let mut taskees: Vec<tokio::task::JoinHandle<()>> =
+            Vec::with_capacity(parallel_cnt as usize);
+        for _ in 0..parallel_cnt {
+            // Clone the task receiver / result sender clone
+            // NOTE: uses Arc, so .clone() creates a thread-safe reference to the same
+            // object.
+            let this_start_working = start_working.clone();
+            let this_task_receiver = task_receiver.clone();
+            let this_result_sender = result_sender.clone();
+            // Create a new "taskee"
+            taskees.push(tokio::spawn(async move {
+                pull_task_and_do_it(this_start_working, this_task_receiver, this_result_sender)
+                    .await
+            }));
+        }
+
+        // Fill the Taskee Queue
+        let input_request_arc = Arc::new(self.input_request.clone());
+        //      Need to determine range of blocks we will be able to prove
+        const DFLT_MAX_NUMBER_BLOCKS: u64 = 1_000;
+        let end_block = {
+            if let Some(TerminateOn::EndBlock { block_number }) = self.input_request.terminate_on {
+                block_number
+            } else {
+                self.input_request
+                    .get_expected_number_proofs()
+                    .unwrap_or(DFLT_MAX_NUMBER_BLOCKS)
+                    + self.input_request.start_block_number
+            }
+        };
+
+        info!(
+            "Creating tasks for [{},{}]",
+            self.starting_block(),
+            end_block
+        );
+
+        // Iterate through each block number from the starting point onward to the max
+        // number blocks.
+        for block_num in self.input_request.start_block_number..=end_block {
+            // Try to send the task to the queue
+            match task_sender
+                .send(ProveBlockTaskInput {
+                    input: input_request_arc.clone(),
+                    runtime: self.runtime.clone(),
+                    block_num,
+                })
+                .await
+            {
+                Ok(_) => (),
+                Err(err) => {
+                    error!("{}", err);
+                    return Err(ManyProverError::FailedToSendTask(block_num));
+                }
+            }
+        }
+
+        // the taskees will stop pulling proof inputs once the sender is closed
+        if !task_sender.is_closed() {
+            info!("Task Sender still open, closing now...");
+            task_sender.close();
+        }
+
+        // Start the timer
+        let total_timer = Arc::new(Instant::now());
+        let total_start_stamp: DateTime<Utc> = SystemTime::now().into();
+        // release the taskees upon starting the timer
+        start_working.store(true, Ordering::SeqCst);
+        info!("Starting the timer and the proving processes");
+
+        //=================================================================================
+        // Start checking for results
+        //=================================================================================
+
+        loop {
+            // Pull the result
+            let prover_result = match result_receiver.recv().await {
+                Ok(Ok(prover_result)) => prover_result,
+                Ok(Err(err)) => {
+                    error!("Failure when proving a block: {}", err);
+                    continue;
+                }
+                Err(err) => {
+                    info!("Result Receiver has been closed: {}", err);
+                    if !task_sender.is_closed() {
+                        warn!("Result Receiver was closed before Task Sender");
+                        task_sender.close();
+                    }
+                    break;
+                }
+            };
+
+            // Deconstruct the result
+            let benchmark_stats = prover_result.benchmark_stats;
+            let proof = prover_result.proof;
+
+            // Add to the cumulative values
+            cumulative_block_gas += benchmark_stats.gas_used;
+            cumulative_n_txs += benchmark_stats.n_txs;
+
+            // The overall elapsed seconds until the end stamp for this proof
+            let overall_elapsed_seconds = benchmark_stats
+                .end_time
+                .signed_duration_since(total_start_stamp)
+                .num_seconds() as u64;
+
+            //-------------------------------------------------------------------------------------------
+            // Proof out
+            //-------------------------------------------------------------------------------------------
+
+            let proof_out_time: Option<std::time::Duration> = match &self.proof_out {
+                Some(proof_out) => {
+                    let proof_out_start = Instant::now();
+                    match proof_out.write(&proof) {
+                        Ok(_) => {
+                            info!("Successfully wrote proof");
+                            Some(proof_out_start.elapsed())
+                        }
+                        Err(err) => {
+                            error!("Failed to write proof");
+                            return Err(ManyProverError::ProofOutError(err));
+                        }
+                    }
+                }
+                None => None,
+            };
+
+            //-------------------------------------------------------------------------------------------
+            // Benchmark Out
+            //-------------------------------------------------------------------------------------------
+
+            // If we are tracking benchmark statistics, add the cumulative values
+            // and then add it to the benchmark out
+            if let Some(benchmark_out) = &mut self.benchmark_out {
+                // Make the received benchmark statistics mutable
+                let mut benchmark_stats = benchmark_stats;
+                // Add to the cumulative counts
+                benchmark_stats.cumulative_gas_used = Some(cumulative_block_gas);
+                benchmark_stats.cumulative_n_txs = Some(cumulative_n_txs);
+                benchmark_stats.proof_out_duration = proof_out_time;
+                benchmark_stats.overall_elapsed_seconds = Some(overall_elapsed_seconds);
+                benchmark_out.push(benchmark_stats);
+            }
+
+            //==================================================================================
+            // Terminate?
+            //==================================================================================
+
+            // This statement will evaluate whether we should terminate.
+            match self.terminate_on() {
+                Some(TerminateOn::ElapsedSeconds { num_seconds }) => {
+                    let elapsed_seconds = total_timer.elapsed().as_secs();
+                    if &elapsed_seconds >= num_seconds {
+                        info!(
+                            "Terminating as elapsed amount of seconds exceeds allowed time ({}s / {}s)",
+                            num_seconds, elapsed_seconds
+                        );
+                        break;
+                    } else {
+                        info!(
+                            "Total elapsed amount of seconds ({}s / {}s)",
+                            num_seconds, elapsed_seconds
+                        );
+                    }
+                },
+                Some(TerminateOn::BlockGasUsed { until_gas_sum }) => {
+                    if &cumulative_block_gas >= until_gas_sum {
+                        info!(
+                            "Terminating as we have elapsed total amount of gas ({} / {})",
+                            cumulative_block_gas, until_gas_sum
+                        );
+                        break;
+                    } else {
+                        info!(
+                            "Total elapsed amount of gas ({} / {})",
+                            cumulative_block_gas, until_gas_sum
+                        );
+                    }
+                }
+                Some(_) | None => (),
+            }
+        }
+
+        start_working.store(false, Ordering::SeqCst);
+
+        // the taskees will stop pulling proof inputs once the sender is closed
+        if !task_sender.is_closed() {
+            info!("Task Sender still open, closing now...");
+            task_sender.close();
+        }
+
+        // Output the benchmark outputs
         if let Some(benchmark_out) = &self.benchmark_out {
             match benchmark_out.publish().await {
                 Ok(()) => info!("Published the benchmark"),
@@ -561,6 +609,9 @@ impl ManyProver {
                 }
             }
         }
+
+        // clean up the tokio handles
+        let _ = futures::future::join_all(taskees).await;
 
         Ok(())
     }
@@ -600,26 +651,25 @@ impl ManyProver {
             // Pre-Proving Termination check
             //------------------------------------------------------------------------
             match self.terminate_on() {
-                Some(TerminateOn::ElapsedSeconds {
-                    num_seconds,
-                    include_straddling: _,
-                }) => match total_timer.elapsed().as_secs() {
-                    elapsed_secs if elapsed_secs >= *num_seconds => {
-                        info!(
-                            "Terminating before block {} due to reaching time constraint.",
-                            cur_block_num
-                        );
-                        break;
+                Some(TerminateOn::ElapsedSeconds { num_seconds }) => {
+                    match total_timer.elapsed().as_secs() {
+                        elapsed_secs if elapsed_secs >= *num_seconds => {
+                            info!(
+                                "Terminating before block {} due to reaching time constraint.",
+                                cur_block_num
+                            );
+                            break;
+                        }
+                        elapsed_secs => {
+                            info!(
+                                "{}/{} seconds elapsed ({}%)",
+                                elapsed_secs,
+                                num_seconds,
+                                ((elapsed_secs as f64) / (*num_seconds as f64))
+                            )
+                        }
                     }
-                    elapsed_secs => {
-                        info!(
-                            "{}/{} seconds elapsed ({}%)",
-                            elapsed_secs,
-                            num_seconds,
-                            ((elapsed_secs as f64) / (*num_seconds as f64))
-                        )
-                    }
-                },
+                }
                 Some(TerminateOn::EndBlock { block_number }) => {
                     if cur_block_num > *block_number {
                         info!(
@@ -736,50 +786,29 @@ impl ManyProver {
             //------------------------------------------------------------------------
 
             match self.terminate_on() {
-                Some(TerminateOn::BlockGasUsed {
-                    until_gas_sum,
-                    include_straddling,
-                }) => {
+                Some(TerminateOn::BlockGasUsed { until_gas_sum }) => {
                     // if we have exceeded the gas sum,
-                    if *until_gas_sum > cumulative_block_gas {
-                        match include_straddling {
-                            Some(true) => (),
-                            None | Some(false) => {
-                                info!("Terminating and not including block {} as it will exceed allowed cumulative gas ({}/{})", cur_block_num, cumulative_block_gas, until_gas_sum);
-                                break;
-                            }
+                    info!(
+                        "{}/{} block gas accumulated ({}%)",
+                        cumulative_block_gas,
+                        until_gas_sum,
+                        (cumulative_block_gas as f64 / *until_gas_sum as f64)
+                    )
+                }
+                Some(TerminateOn::ElapsedSeconds { num_seconds }) => {
+                    match total_timer.elapsed().as_secs() {
+                        secs if secs > *num_seconds => {
+                            info!(
+                                "Exceeded elapsed time, terminating after recording block {}",
+                                cur_block_num
+                            );
                         }
-                    } else {
-                        info!(
-                            "{}/{} block gas accumulated ({}%)",
-                            cumulative_block_gas,
-                            until_gas_sum,
-                            (cumulative_block_gas as f64 / *until_gas_sum as f64)
-                        )
+                        secs => info!(
+                            "Time elapsed after proving block {}: {} / {}",
+                            cur_block_num, secs, num_seconds
+                        ),
                     }
                 }
-                Some(TerminateOn::ElapsedSeconds {
-                    num_seconds,
-                    include_straddling,
-                }) => match (total_timer.elapsed().as_secs(), include_straddling) {
-                    (secs, Some(true)) if secs > *num_seconds => {
-                        info!(
-                            "Exceeded elapsed time, terminating after recording block {}",
-                            cur_block_num
-                        );
-                    }
-                    (secs, Some(false) | None) if secs > *num_seconds => {
-                        info!(
-                            "Exceeded elapsed time, terminating before recording block {}",
-                            cur_block_num
-                        );
-                        break;
-                    }
-                    (secs, _) => info!(
-                        "Time elapsed after proving block {}: {} / {}",
-                        cur_block_num, secs, num_seconds
-                    ),
-                },
                 _ => (),
             }
 
