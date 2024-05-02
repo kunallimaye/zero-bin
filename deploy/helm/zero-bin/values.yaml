@@ -78,6 +78,11 @@ hull:
                   port: 8080
                 initialDelaySeconds: 10
                 periodSeconds: 5
+          tolerations:
+            - key: "workload"
+              operator: "Equal"
+              value: "zk"
+              effect: "NoSchedule"
       worker:
         replicas: 1
         pod:
@@ -103,6 +108,11 @@ hull:
                 requests:
                   cpu: 5
                   memory: 32Gi
+          tolerations:
+            - key: "workload"
+              operator: "Equal"
+              value: "zk"
+              effect: "NoSchedule"
     service:
       leader:
         type: LoadBalancer
