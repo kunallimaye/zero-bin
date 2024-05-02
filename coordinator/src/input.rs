@@ -130,10 +130,7 @@ impl ProveBlocksInput {
     ///
     /// This is largely based on the termination condition ([TerminateOn])
     pub fn estimate_expected_number_proofs(&self) -> Option<u64> {
-        match self.get_expected_number_proofs() {
-            Some(expected) => Some(expected),
-            None => None
-        }
+        self.get_expected_number_proofs()
     }
 
     /// Returns either the checkpoint value or the start block number - 1
