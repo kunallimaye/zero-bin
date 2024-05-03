@@ -293,13 +293,13 @@ pub struct BenchmarkingOutput {
 impl BenchmarkingOutput {
     pub async fn from_config(
         config: BenchmarkOutputConfig,
-        init_capacity: Option<usize>,
+        init_capacity: Option<u64>,
     ) -> Result<Self, BenchmarkingOutputBuildError> {
         Ok(BenchmarkingOutput {
             data: BenchmarkingOutputData::from_config(&config).await?,
             config,
             stats: match init_capacity {
-                Some(capacity) => Vec::with_capacity(capacity),
+                Some(capacity) => Vec::with_capacity(capacity as usize),
                 None => Vec::new(),
             },
         })
