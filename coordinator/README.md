@@ -1,12 +1,54 @@
 # Coordinator
 
-Coordinator serves as modified Leader for evaluating multiple blocks.  It serves as a persistent instance similar to the service provided by the Leader.
-
-The Coordinator steals functions from a modified Leader crate (needed to make some functions public), and runs persistently.  It receives requests for a starting block, along with various possible termination conditions.
+Coordinator serves as modified Leader for evaluating multiple blocks.  It serves as a persistent instance similar to the service provided by the Leader.  The Coordinator steals functions from a modified Leader crate (needed to make some functions public), and runs persistently.  It receives requests for a starting block, along with various possible termination conditions.
 
 ## Benchmarking
 
 We set up various benchmarking opportunities to evaluate the amount of time it takes to run several operations per block.
+
+```rust
+pub struct BenchmarkingStats {
+    /// The block number of the block proved
+    pub block_number: u64,
+    /// The number of transactions in the block proved
+    pub n_txs: u64,
+    /// The cumulative transaction count.  This is the number of transactions
+    /// from this block and all blocks beforehand.  None implies data not
+    /// available, not 0.
+    pub cumulative_n_txs: Option<u64>,
+    /// Currently not applicable
+    pub avg_tx_proof_duration: Option<f64>,
+    /// The duration fo time took to fetch [prover::ProverInput], stored as a
+    /// [Duration].
+    pub fetch_duration: Duration,
+    /// The amount of time elapsed during the process of proving this block,
+    /// stored as a [Duration]
+    pub proof_duration: Duration,
+    /// The start time of the proof.  [BenchmarkingStats::proof_duration] is a
+    /// more reliable value to use for the proof duration.  Timestamps measured
+    /// in UTC.
+    pub start_time: DateTime<Utc>,
+    /// The end time of the proof.  [BenchmarkingStats::proof_duration] is a
+    /// more reliable value to use for the proof duration.  Timestamps measured
+    /// in UTC.
+    pub end_time: DateTime<Utc>,
+    /// The number of seconds elapsed from the first block in the benchmarking
+    /// process and the end of the current block being proven
+    pub overall_elapsed_seconds: Option<u64>,
+    /// The amount of time elapsed during the process of saving this block's
+    /// proof to its output, stored as a [Duration]
+    pub proof_out_duration: Option<Duration>,
+    /// The gas used by the block we proved
+    pub gas_used: u64,
+    /// The gas used per transaction in the block in the original chain
+    pub gas_used_per_tx: Vec<u64>,
+    /// The cumulative gas used by the block we proved.  None implies
+    /// not filled in, not 0.
+    pub cumulative_gas_used: Option<u64>,
+    /// The difficulty of the block we proved
+    pub difficulty: u64,
+}
+```
 
 ## Concurrency
 
