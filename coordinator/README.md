@@ -1,6 +1,26 @@
 # Coordinator
 
-Coordinator serves as modified Leader for evaluating multiple blocks.  Coordinator is a persistent webserver used to start the proving process blocks while recording the proofs along with benchmark statistics.
+Coordinator serves as modified Leader for evaluating multiple blocks.  It serves as a persistent instance similar to the service provided by the Leader.
+
+The Coordinator steals functions from a modified Leader crate (needed to make some functions public), and runs persistently.  It receives requests for a starting block, along with various possible termination conditions.
+
+## Benchmarking
+
+We set up various benchmarking opportunities to evaluate the amount of time it takes to run several operations per block.
+
+## Concurrency
+
+We have attempted both a sequential approach and two concurrent approaches.
+
+### Sequential
+
+The sequential approach was simply placing the function to prove the blocks within a for loop.  This proved to not be the most effective solution.  
+
+### Parallel
+
+We then tried to utilize tokio's thread spawning to spawn a new thread for each block we intend on proving, performing up to `num_parallel` in parallel, placing the futures in a queue to dequeue from the front whenever it becomes ready.
+
+We later attempted to avoid needlessly recreating the threads we spawned by setting up an async channel receiver in each thread to pull from a queue of ProverInput.  This enables us to start proving blocks without needing to spawn a new thread.  This reduction in overhead did allow for some more blocks to be proven in the same time period.  It also enabled blocks to be completed out of order rather than the former parallel method which relied off dequeueing the blocks in order.
 
 ## Requests
 
