@@ -26,10 +26,6 @@ pub struct BenchmarkingStats {
     /// from this block and all blocks beforehand.  None implies data not
     /// available, not 0.
     pub cumulative_n_txs: Option<u64>,
-    /// The average duration to prove a singular transaction.  If there are no
-    /// transactions, the value should be None.  Otherwise, we should see the
-    /// number of transactions divided by the total duration.
-    pub avg_tx_proof_duration: Option<f64>,
     /// The duration fo time took to fetch [prover::ProverInput], stored as a
     /// [Duration].
     pub fetch_duration: Duration,
@@ -65,7 +61,7 @@ impl BenchmarkingStats {
     /// Returns a header row
     pub fn header_row() -> String {
         String::from(
-            "block_number, number_txs, cumulative_number_txs, avg_tx_proof_duration, fetch_duration, proof_duration, start_time, end_time, overall_elapsed_time, proof_out_duration, gas_used, gas_used_per_tx, cumulative_gas_used, difficulty",
+            "block_number, number_txs, cumulative_number_txs, fetch_duration, proof_duration, start_time, end_time, overall_elapsed_time, proof_out_duration, gas_used, gas_used_per_tx, cumulative_gas_used, difficulty",
         )
     }
 
@@ -102,11 +98,10 @@ impl BenchmarkingStats {
     #[allow(clippy::format_in_format_args)]
     pub fn as_csv_row(&self) -> String {
         format!(
-            "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, \"{}\", {}, {}",
+            "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, \"{}\", {}, {}",
             self.block_number,
             self.n_txs,
             Self::unwrap_to_string(self.cumulative_n_txs),
-            Self::unwrap_to_string(self.avg_tx_proof_duration),
             self.fetch_duration.as_secs_f64(),
             self.proof_duration.as_secs_f64(),
             self.start_time.format("%d-%m-%Y %H:%M:%S"),
