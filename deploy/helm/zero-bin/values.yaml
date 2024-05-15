@@ -140,7 +140,7 @@ hull:
             targetPort: 8080
     poddisruptionbudget:
       leader:
-        minAvailable: 1
+        maxUnavailable: 1
         selector:
           matchLabels:
             app.kubernetes.io/component: leader
