@@ -23,7 +23,7 @@ pub struct TxProof {
 
 #[cfg(not(feature = "test_only"))]
 impl Operation for TxProof {
-    type Input = GenerationInputs;  
+    type Input = GenerationInputs;
     type Output = proof_gen::proof_types::AggregatableProof;
 
     fn execute(&self, input: Self::Input) -> Result<Self::Output> {
