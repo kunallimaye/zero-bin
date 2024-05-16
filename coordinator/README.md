@@ -117,7 +117,6 @@ The example below proves blocks [1,10] using the RPC function listed in ZeroBin,
     "LocalCsv": {"file_name": "test.csv"}
   }
 }
-
 ```
 
 An example not recording the proofs, and posting the results to a google cloud storage bucket.

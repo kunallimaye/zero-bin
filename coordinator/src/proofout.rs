@@ -2,10 +2,10 @@
 // std imports
 use std::{env::VarError, fs::create_dir_all, path::PathBuf};
 
-// 3rd party imports
-use log::{debug, error, info, warn};
 use proof_gen::proof_types::GeneratedBlockProof;
 use serde_json::to_writer;
+// 3rd party imports
+use tracing::{debug, error, info, warn};
 
 #[derive(Debug)]
 pub enum ProofOutputError {
