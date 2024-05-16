@@ -9,7 +9,7 @@ use std::time::{Instant, SystemTime};
 
 use async_channel;
 use chrono::{DateTime, Utc};
-use log::{debug, error, info, warn};
+use tracing::{debug, error, info, warn};
 use paladin::runtime::Runtime;
 use proof_gen::proof_types::GeneratedBlockProof;
 use proof_gen::types::PlonkyProofIntern;
@@ -308,7 +308,7 @@ impl ManyProver {
             info!("Starting to prove block {}", block_num);
             let proof_start_instance = Instant::now();
             let proof_start_stamp: DateTime<Utc> = SystemTime::now().into();
-            let proof = match prover_input.prove(runtime.as_ref(), None).await {
+            let proof = match prover_input.prove(runtime.as_ref(), None, true).await {
                 Ok(proof) => proof,
                 Err(err) => {
                     error!("Failed to generate block {}'s proof: {}", block_num, err);
@@ -762,7 +762,7 @@ impl ManyProver {
             let proof_start_instance = Instant::now();
             // The stamp will signify the starting process of this proof.
             let proof_start_stamp: DateTime<Utc> = SystemTime::now().into();
-            let proof = match prover_input.prove(self.runtime.as_ref(), prev).await {
+            let proof = match prover_input.prove(self.runtime.as_ref(), prev, true).await {
                 Ok(proof) => proof,
                 Err(err) => {
                     error!(

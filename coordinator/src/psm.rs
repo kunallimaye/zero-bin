@@ -5,7 +5,7 @@ use std::env;
 use common::prover_state::{
     circuit::CircuitConfig, CircuitPersistence, ProverStateManager, TableLoadStrategy,
 };
-use log::{error, info, warn};
+use tracing::{error, info, warn};
 
 pub const PSM_CIRCUIT_TABLE_LOAD_STRAT_ENVKEY: &str = "PSM_TABLE_LOAD_STRAT";
 pub const PSM_CIRCUIT_PERSISTENCE_ENVKEY: &str = "PSM_CIRCUIT_PERSISTENCE";

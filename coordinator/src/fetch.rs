@@ -1,6 +1,6 @@
 //! This is useful for fetching [ProverInput] per block
 use anyhow::Error;
-use log::{error, info};
+use tracing::{error, info};
 use prover::ProverInput;
 use rpc::{fetch_prover_input, FetchProverInputRequest};
 
