@@ -6,7 +6,7 @@ use proof_gen::types::PlonkyProofIntern;
 use prover::ProverInput;
 
 /// The main function for the stdio mode.
-pub(crate) async fn stdio_main(
+pub async fn stdio_main(
     runtime: Runtime,
     previous: Option<PlonkyProofIntern>,
     save_inputs_on_error: bool,

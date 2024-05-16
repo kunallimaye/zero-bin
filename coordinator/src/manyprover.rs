@@ -9,11 +9,11 @@ use std::time::{Instant, SystemTime};
 
 use async_channel;
 use chrono::{DateTime, Utc};
-use tracing::{debug, error, info, warn};
 use paladin::runtime::Runtime;
 use proof_gen::proof_types::GeneratedBlockProof;
 use proof_gen::types::PlonkyProofIntern;
 use tokio::task::JoinError;
+use tracing::{debug, error, info, warn};
 
 use crate::benchmarking::{
     BenchmarkingOutput, BenchmarkingOutputBuildError, BenchmarkingOutputError, BenchmarkingStats,

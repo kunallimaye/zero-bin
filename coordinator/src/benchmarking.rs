@@ -8,8 +8,8 @@ use google_cloud_storage::{
     client::{Client, ClientConfig},
     http::objects::upload::{Media, UploadObjectRequest, UploadType},
 };
-use tracing::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
+use tracing::{debug, error, info, warn};
 
 //==================================================================================
 // Benchmarking Statistics

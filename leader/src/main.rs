@@ -34,9 +34,7 @@ fn get_previous_proof(path: Option<PathBuf>) -> Result<Option<PlonkyProofIntern>
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
-    #[cfg(feature = "extra_log")]
-    env_logger::init();
-    // init::tracing();
+    init::tracing();
 
     if env::var("EVM_ARITHMETIZATION_PKG_VER").is_err() {
         let pkg_ver = get_package_version("evm_arithmetization")?;

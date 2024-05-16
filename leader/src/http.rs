@@ -11,7 +11,7 @@ use serde_json::to_writer;
 use tracing::{debug, error, info};
 
 /// The main function for the HTTP mode.
-pub(crate) async fn http_main(
+pub async fn http_main(
     runtime: Runtime,
     port: u16,
     output_dir: PathBuf,

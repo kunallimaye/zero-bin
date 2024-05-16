@@ -3,8 +3,6 @@ use ethereum_types::U256;
 #[cfg(feature = "test_only")]
 use futures::stream::TryStreamExt;
 use ops::TxProof;
-#[cfg(not(feature = "test_only"))]
-use paladin::directive::Literal;
 use paladin::{
     directive::{Directive, IndexedStream},
     runtime::Runtime,
