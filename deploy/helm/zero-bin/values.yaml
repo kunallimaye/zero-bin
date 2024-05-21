@@ -39,13 +39,13 @@ hull:
                 SERVER_ADDR:
                   value: 0.0.0.0:8080
                 ARITHMETIC_CIRCUIT_SIZE:
-                  value: 23..30
+                  value: 16..23
                 BYTE_PACKING_CIRCUIT_SIZE:
                   value: 9..21
                 CPU_CIRCUIT_SIZE:
-                  value: 17..30
+                  value: 12..25
                 KECCAK_CIRCUIT_SIZE:
-                  value: 20..28
+                  value: 14..20
                 KECCAK_SPONGE_CIRCUIT_SIZE:
                   value: 9..15
                 LOGIC_CIRCUIT_SIZE:
@@ -113,13 +113,13 @@ hull:
                 RUST_BACKTRACE:
                   value: full
                 ARITHMETIC_CIRCUIT_SIZE:
-                  value: 23..30
+                  value: 16..23
                 BYTE_PACKING_CIRCUIT_SIZE:
                   value: 9..21
                 CPU_CIRCUIT_SIZE:
-                  value: 17..30
+                  value: 12..25
                 KECCAK_CIRCUIT_SIZE:
-                  value: 20..28
+                  value: 14..20
                 KECCAK_SPONGE_CIRCUIT_SIZE:
                   value: 9..15
                 LOGIC_CIRCUIT_SIZE:
