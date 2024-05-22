@@ -1,0 +1,4 @@
+# shellcheck disable=SC2148
+watch_file {pkgs,deps,overlay}.nix
+watch_file utils/tf.sh
+use nix
