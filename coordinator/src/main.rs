@@ -284,7 +284,7 @@ fn build_paladin_config_from_env() -> Config {
                 "Number of workers not specified for InMemory runtime, using default: {}",
                 DFLT_NUM_WORKERS
             );
-            Some(DFLT_NUM_WORKERS)
+            None //Some(DFLT_NUM_WORKERS)
         }
         (paladin::config::Runtime::InMemory, Err(env::VarError::NotUnicode(os_str))) => {
             info!("Non-Unicode input for number of workers: {:?}", os_str);
