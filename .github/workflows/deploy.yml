@@ -17,7 +17,7 @@ env:
 jobs:
   build:
     name: Build docker images
-    runs-on: gha-runner-set
+    runs-on: ubuntu-latest #gha-runner-set
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -83,7 +83,7 @@ jobs:
 
   deploy:
     name: Deploy to GKE
-    runs-on: gha-runner-set
+    runs-on: ubuntu-latest #gha-runner-set
     needs: build
     permissions:
       contents: 'read'
