@@ -308,20 +308,20 @@ impl ManyProver {
             info!("Starting to prove block {}", block_num);
             let proof_start_instance = Instant::now();
             let proof_start_stamp: DateTime<Utc> = SystemTime::now().into();
-            let proof = match prover_input.prove(runtime.as_ref(), None, true).await {
-                Ok(proof) => proof,
+            let benchmarked_proof = match prover_input.prove_and_benchmark(runtime.as_ref(), None, true).await {
+                Ok(benchmarked_proof) => benchmarked_proof,
                 Err(err) => {
                     error!("Failed to generate block {}'s proof: {}", block_num, err);
                     return Err(ManyProverError::Proof(err));
                 }
             };
 
-            let proof_duration = proof_start_instance.elapsed();
+            let total_proof_duration = proof_start_instance.elapsed();
             let proof_end_stamp: DateTime<Utc> = SystemTime::now().into();
             info!(
                 "Proved block {} in {} seconds",
                 block_num,
-                proof_duration.as_secs_f64()
+                total_proof_duration.as_secs_f64()
             );
 
             // Create the benchmarking statistics and return both.
@@ -331,7 +331,10 @@ impl ManyProver {
                     n_txs: n_txs as u64,
                     cumulative_n_txs: None,
                     fetch_duration,
-                    proof_duration,
+                    total_proof_duration,
+                    prep_duration: benchmarked_proof.prep_dur,
+                    txproof_duration: benchmarked_proof.proof_dur,
+                    agg_duration: benchmarked_proof.agg_dur,
                     start_time: proof_start_stamp,
                     end_time: proof_end_stamp,
                     overall_elapsed_seconds: None,
@@ -341,7 +344,7 @@ impl ManyProver {
                     cumulative_gas_used: None,
                     difficulty,
                 },
-                proof,
+                proof: benchmarked_proof.proof,
             })
         }
 
@@ -762,7 +765,7 @@ impl ManyProver {
             let proof_start_instance = Instant::now();
             // The stamp will signify the starting process of this proof.
             let proof_start_stamp: DateTime<Utc> = SystemTime::now().into();
-            let proof = match prover_input.prove(self.runtime.as_ref(), prev, true).await {
+            let benchmarked_proof = match prover_input.prove_and_benchmark(self.runtime.as_ref(), prev, true).await {
                 Ok(proof) => proof,
                 Err(err) => {
                     error!(
@@ -820,7 +823,7 @@ impl ManyProver {
             let proof_out_time: Option<std::time::Duration> = match &self.proof_out {
                 Some(proof_out) => {
                     let proof_out_start = Instant::now();
-                    match proof_out.write(&proof) {
+                    match proof_out.write(&benchmarked_proof.proof) {
                         Ok(_) => {
                             info!("Successfully wrote proof");
                             Some(proof_out_start.elapsed())
@@ -837,7 +840,7 @@ impl ManyProver {
             // If we need to keep the proof, save it in prev, otherwise do not.
             prev = match self.input_request.forward_prev {
                 Some(false) | None => None,
-                Some(true) => Some(proof.intern),
+                Some(true) => Some(benchmarked_proof.proof.intern),
             };
 
             //------------------------------------------------------------------------
@@ -852,7 +855,10 @@ impl ManyProver {
                     n_txs,
                     cumulative_n_txs: Some(cumulative_n_txs),
                     fetch_duration,
-                    proof_duration,
+                    total_proof_duration: proof_duration,
+                    prep_duration: benchmarked_proof.prep_dur,
+                    txproof_duration: benchmarked_proof.proof_dur,
+                    agg_duration: benchmarked_proof.agg_dur,
                     start_time: proof_start_stamp,
                     end_time: proof_end_stamp,
                     overall_elapsed_seconds: Some(
