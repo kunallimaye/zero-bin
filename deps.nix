@@ -17,7 +17,8 @@ in with pkgs; {
     diffutils
     bash
   ] ++ lib.optionals (is_local || is_ci) [
-    rust-bin.nightly.latest.default
+    # rust-bin.nightly.latest.default
+    rust-bin.nightly."2024-05-21".default
     pkg-config
     openssl
 
