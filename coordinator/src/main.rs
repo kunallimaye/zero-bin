@@ -10,13 +10,13 @@ use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use anyhow::Result;
 use common::prover_state;
 use dotenvy::dotenv;
-// use leader::init;
-use log::{debug, error, info, warn};
 use ops::register;
 use paladin::{
     config::{Config, Serializer},
     runtime::Runtime,
 };
+// use leader::init;
+use tracing::{debug, error, info, warn};
 
 pub mod benchmarking;
 pub mod fetch;
@@ -39,12 +39,14 @@ async fn main() -> Result<()> {
     debug!("Loading dotenv");
     dotenv().ok();
 
+    leader::init::tracing();
+
     // Loading the logger
-    debug!("Loading env_logger");
-    let mut builder = env_logger::Builder::from_default_env();
-    builder.target(env_logger::Target::Stdout); // Redirect logs to stdout
-    builder.init();
-    debug!("EnvLogger setup");
+    // debug!("Loading env_logger");
+    // let mut builder = env_logger::Builder::from_default_env();
+    // builder.target(env_logger::Target::Stdout); // Redirect logs to stdout
+    // builder.init();
+    // debug!("EnvLogger setup");
 
     // Initialize the tracing (stolen from Leader Crate's init function)
     // This will initialize a lot of the internal logging, however
