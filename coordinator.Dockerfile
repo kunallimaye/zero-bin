@@ -24,7 +24,7 @@ COPY coordinator/Cargo.toml ./coordinator/Cargo.toml
 
 COPY ./rust-toolchain.toml ./
 
-RUN RUSTFLAGS='-C target-cpu=native' cargo build --release --bin coordinator 
+RUN cargo build --verbose --release --bin coordinator 
 
 COPY coordinator ./coordinator
 COPY ops ./ops

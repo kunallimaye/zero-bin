@@ -18,7 +18,7 @@ COPY worker/Cargo.toml ./worker/Cargo.toml
 
 COPY ./rust-toolchain.toml ./
 
-RUN RUSTFLAGS='-C target-cpu=native' cargo build --release --bin worker 
+RUN cargo build --verbose --release --bin worker 
 
 COPY common ./common
 COPY ops ./ops

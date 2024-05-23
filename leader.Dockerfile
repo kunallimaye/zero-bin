@@ -22,7 +22,7 @@ COPY leader/Cargo.toml ./leader/Cargo.toml
 
 COPY ./rust-toolchain.toml ./
 
-RUN RUSTFLAGS='-C target-cpu=native' cargo build --release --bin leader 
+RUN cargo build --verbose --release --bin leader 
 
 COPY ops ./ops
 COPY common ./common
