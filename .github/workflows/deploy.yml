@@ -3,7 +3,7 @@ name: Build & Deploy
 on:
   push:
     branches:
-      - develop
+      - develop-ideal-working
 
 env:
   DEFAULT_TAGS: |
