@@ -23,7 +23,6 @@ COPY leader/Cargo.toml ./leader/Cargo.toml
 COPY coordinator/Cargo.toml ./coordinator/Cargo.toml
 
 COPY ./rust-toolchain.toml ./
-
 RUN cargo build --release --bin coordinator 
 
 COPY coordinator ./coordinator
@@ -41,7 +40,7 @@ RUN \
   touch leader/src/main.rs && \
   touch coordinator/src/main.rs
 
-RUN cargo build --release --bin coordinator 
+RUN cargo build --release --bin coordinator
 
 FROM debian:bullseye-slim
 RUN apt-get update && apt-get install -y ca-certificates libjemalloc2

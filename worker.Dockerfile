@@ -17,7 +17,6 @@ COPY ops/Cargo.toml ./ops/Cargo.toml
 COPY worker/Cargo.toml ./worker/Cargo.toml
 
 COPY ./rust-toolchain.toml ./
-
 RUN cargo build --release --bin worker 
 
 COPY common ./common
@@ -28,7 +27,7 @@ RUN \
   touch ops/src/lib.rs && \
   touch worker/src/main.rs
 
-RUN cargo build --release --bin worker 
+RUN cargo build --release --bin worker
 
 FROM debian:bullseye-slim
 RUN apt-get update && apt-get install -y ca-certificates libjemalloc2

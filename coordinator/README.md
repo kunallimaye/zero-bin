@@ -119,6 +119,22 @@ The example below proves blocks [1,10] using the RPC function listed in ZeroBin,
 }
 ```
 
+```json
+{
+  "run_name": "run",
+  "start_block_number": 18,
+  "terminate_on": {
+    "EndBlock": {"block_number": 21}
+  },
+  "block_source": {
+    "ZeroBinRpc": {"rpc_url": "http://35.208.84.178:8545/"}
+  },
+  "benchmark_output": {
+    "LocalCsv": {"file_name": "test.csv"}
+  }
+}
+```
+
 An example not recording the proofs, and posting the results to a google cloud storage bucket.
 
 ```json

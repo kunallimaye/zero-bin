@@ -36,7 +36,7 @@ RUN \
   touch prover/src/lib.rs && \
   touch leader/src/main.rs
 
-RUN cargo build --release --bin leader 
+RUN cargo build --release --bin leader
 
 FROM debian:bullseye-slim
 RUN apt-get update && apt-get install -y ca-certificates libjemalloc2
