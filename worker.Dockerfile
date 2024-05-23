@@ -16,8 +16,8 @@ COPY common/Cargo.toml ./common/Cargo.toml
 COPY ops/Cargo.toml ./ops/Cargo.toml
 COPY worker/Cargo.toml ./worker/Cargo.toml
 
-COPY rust-toolchain.toml .
-COPY .cargo ./.cargo
+COPY ./rust-toolchain.toml ./
+RUN cargo build --release --bin worker 
 
 COPY common ./common
 COPY ops ./ops

@@ -22,8 +22,8 @@ COPY prover/Cargo.toml ./prover/Cargo.toml
 COPY leader/Cargo.toml ./leader/Cargo.toml
 COPY coordinator/Cargo.toml ./coordinator/Cargo.toml
 
-COPY rust-toolchain.toml .
-COPY .cargo ./.cargo
+COPY ./rust-toolchain.toml ./
+RUN cargo build --release --bin coordinator 
 
 COPY coordinator ./coordinator
 COPY ops ./ops
