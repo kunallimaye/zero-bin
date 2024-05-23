@@ -3,7 +3,7 @@ name: Build & Deploy
 on:
   push:
     branches:
-      - develop-ideal-working
+      - develop
 
 env:
   DEFAULT_TAGS: |
@@ -17,7 +17,7 @@ env:
 jobs:
   build:
     name: Build docker images
-    runs-on: ubuntu-latest
+    runs-on: gha-runner-set
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -83,7 +83,7 @@ jobs:
 
   deploy:
     name: Deploy to GKE
-    runs-on: ubuntu-latest
+    runs-on: gha-runner-set
     needs: build
     permissions:
       contents: 'read'
