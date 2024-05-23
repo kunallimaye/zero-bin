@@ -1,3 +1,0 @@
-# shellcheck disable=SC2148
-watch_file {pkgs,deps,overlay}.nix
-use nix

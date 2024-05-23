@@ -1,9 +1,0 @@
-[build]
-rustflags = [
-  "-C",
-  "target-cpu=native",
-
-  # FIXME: this is a workaround not a SOLUTION!
-  "-C",
-  "link-dead-code",
-]
