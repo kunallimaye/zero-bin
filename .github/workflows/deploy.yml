@@ -107,6 +107,8 @@ jobs:
           cluster_name: 'immutable-prod'
           location: 'us-central1'
 
+      - name: Install zip
+        uses: montudor/action-zip@v1
       - name: Install helm
         uses: azure/setup-helm@v4.1.0
         with:
