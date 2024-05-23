@@ -4,9 +4,9 @@ FROM rustlang/rust:nightly-bullseye-slim@sha256:2be4bacfc86e0ec62dfa287949ceb47f
 RUN apt-get update && apt-get install -y libjemalloc2 libjemalloc-dev make
 
 RUN \
-  mkdir -p common/src  && touch common/src/lib.rs && \
-  mkdir -p ops/src     && touch ops/src/lib.rs && \
-  mkdir -p worker/src  && echo "fn main() {println!(\"YO!\");}" > worker/src/main.rs
+    mkdir -p common/src  && touch common/src/lib.rs && \
+    mkdir -p ops/src     && touch ops/src/lib.rs && \
+    mkdir -p worker/src  && echo "fn main() {println!(\"YO!\");}" > worker/src/main.rs
 
 COPY Cargo.toml .
 RUN sed -i "2s/.*/members = [\"common\", \"ops\", \"worker\"]/" Cargo.toml
@@ -18,17 +18,17 @@ COPY worker/Cargo.toml ./worker/Cargo.toml
 
 COPY ./rust-toolchain.toml ./
 
-RUN cargo build --verbose --release --bin worker 
+RUN cargo build --verbose --release --bin worker
 
 COPY common ./common
 COPY ops ./ops
 COPY worker ./worker
 RUN \
-  touch common/src/lib.rs && \
-  touch ops/src/lib.rs && \
-  touch worker/src/main.rs
+    touch common/src/lib.rs && \
+    touch ops/src/lib.rs && \
+    touch worker/src/main.rs
 
-RUN RUSTFLAGS='-C target-cpu=native' cargo build --release --bin worker 
+RUN cargo build --verbose --release --bin worker
 
 FROM debian:bullseye-slim
 RUN apt-get update && apt-get install -y ca-certificates libjemalloc2
