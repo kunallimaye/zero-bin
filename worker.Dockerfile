@@ -1,4 +1,4 @@
-FROM rustlang/rust:nightly-bullseye-slim as builder
+FROM rustlang/rust:nightly-bullseye-slim@sha256:2be4bacfc86e0ec62dfa287949ceb47f9b6d9055536769bdee87b7c1788077a9 as builder
 
 # Install jemalloc
 RUN apt-get update && apt-get install -y libjemalloc2 libjemalloc-dev make

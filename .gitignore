@@ -13,3 +13,7 @@ proofs/
 # Serialized generated prover & verifier state used by plonky2
 prover_state_*
 verifier_state_*
+
+# Coordinator output
+coordinator/benchmark_out/
+coordinator/proof_out/
