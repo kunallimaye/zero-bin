@@ -308,7 +308,10 @@ impl ManyProver {
             info!("Starting to prove block {}", block_num);
             let proof_start_instance = Instant::now();
             let proof_start_stamp: DateTime<Utc> = SystemTime::now().into();
-            let benchmarked_proof = match prover_input.prove_and_benchmark(runtime.as_ref(), None, true).await {
+            let benchmarked_proof = match prover_input
+                .prove_and_benchmark(runtime.as_ref(), None, true)
+                .await
+            {
                 Ok(benchmarked_proof) => benchmarked_proof,
                 Err(err) => {
                     error!("Failed to generate block {}'s proof: {}", block_num, err);
@@ -765,7 +768,10 @@ impl ManyProver {
             let proof_start_instance = Instant::now();
             // The stamp will signify the starting process of this proof.
             let proof_start_stamp: DateTime<Utc> = SystemTime::now().into();
-            let benchmarked_proof = match prover_input.prove_and_benchmark(self.runtime.as_ref(), prev, true).await {
+            let benchmarked_proof = match prover_input
+                .prove_and_benchmark(self.runtime.as_ref(), prev, true)
+                .await
+            {
                 Ok(proof) => proof,
                 Err(err) => {
                     error!(
