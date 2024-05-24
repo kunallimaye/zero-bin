@@ -43,6 +43,3 @@ opt-level = 3
 incremental = true
 lto = "fat"
 codegen-units = 1
-
-# [build]
-# rustflags = ["-C", "target-cpu=native"]
