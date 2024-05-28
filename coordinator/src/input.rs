@@ -95,7 +95,7 @@ pub struct ProveBlocksInput {
     /// The starting block number
     pub start_block_number: u64,
     /// The checkpoint block number.  If not provided, will be the
-    /// the block before the current block number, or 
+    /// the block before the current block number, or
     /// [Checkpoint::BlockNumberNegativeOffset] set to 1.
     pub checkpoint: Option<Checkpoint>,
     /// The termination condition.  If not provided, will not terminate until
