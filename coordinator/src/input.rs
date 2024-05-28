@@ -1,7 +1,7 @@
 //! This module contains a lot of the important input structs
 use serde::{Deserialize, Serialize};
 
-use crate::benchmarking::BenchmarkOutputConfig;
+use crate::{benchmarking::BenchmarkOutputConfig, fetch::Checkpoint};
 
 /// The means for terminating.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -95,8 +95,9 @@ pub struct ProveBlocksInput {
     /// The starting block number
     pub start_block_number: u64,
     /// The checkpoint block number.  If not provided, will be the
-    /// `start_block_number` - 1.
-    pub checkpoint_block_number: Option<u64>,
+    /// the block before the current block number, or 
+    /// [Checkpoint::BlockNumberNegativeOffset] set to 1.
+    pub checkpoint: Option<Checkpoint>,
     /// The termination condition.  If not provided, will not terminate until
     /// exhausted or an error occurs.
     pub terminate_on: Option<TerminateOn>,
@@ -134,13 +135,5 @@ impl ProveBlocksInput {
     /// This is largely based on the termination condition ([TerminateOn])
     pub fn estimate_expected_number_proofs(&self) -> Option<u64> {
         self.get_expected_number_proofs()
-    }
-
-    /// Returns either the checkpoint value or the start block number - 1
-    pub fn get_checkpoint_block_number(&self) -> u64 {
-        match self.checkpoint_block_number {
-            Some(checkpoint) => checkpoint,
-            None => self.start_block_number - 1,
-        }
     }
 }
