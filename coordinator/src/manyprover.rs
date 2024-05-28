@@ -120,9 +120,6 @@ impl ManyProver {
                         "Forwarding proofs with parallel not supported",
                     )));
                 }
-                warn!(
-                "There are some issues with forward_prev = true, would recommend leaving it false"
-            )
             }
             Some(false) | None => (),
         }
@@ -263,7 +260,8 @@ impl ManyProver {
             // FETCHING
             debug!("Attempting to fetch block {}", block_num);
             let fetch_start_instance = Instant::now();
-            let prover_input = match fetch(block_num, None, &input.block_source).await {
+            let prover_input = match fetch(block_num, &input.checkpoint, &input.block_source).await
+            {
                 Ok(prover_input) => prover_input,
                 Err(err) => {
                     error!("Failed to fetch block number: {}", block_num);
@@ -705,7 +703,7 @@ impl ManyProver {
             let fetch_start_instance = Instant::now();
             let prover_input = match fetch(
                 cur_block_num,
-                None, // input.checkpoint_block_number,
+                &self.input_request.checkpoint,
                 &self.input_request.block_source,
             )
             .await

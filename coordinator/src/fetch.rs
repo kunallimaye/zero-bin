@@ -26,10 +26,34 @@ impl std::error::Error for FetchError {}
 // Fetching
 //=============================================================================
 
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub enum Checkpoint {
+    Constant(u64),
+    BlockNumberNegativeOffset(u64),
+}
+
+impl Default for Checkpoint {
+    fn default() -> Self {
+        Self::BlockNumberNegativeOffset(1)
+    }
+}
+
+impl Checkpoint {
+    pub fn get_checkpoint(&self, block_number: u64) -> u64 {
+        match self {
+            Self::BlockNumberNegativeOffset(offset) if block_number > *offset => {
+                block_number - offset
+            }
+            Self::BlockNumberNegativeOffset(_) => 0,
+            Self::Constant(constant_value) => *constant_value,
+        }
+    }
+}
+
 /// Fetches the prover input given the [BlockSource]
 pub async fn fetch(
     block_number: u64,
-    checkpoint_block_number: Option<u64>,
+    checkpoint_method: &Option<Checkpoint>,
     source: &BlockSource,
 ) -> Result<ProverInput, FetchError> {
     match source {
@@ -42,11 +66,9 @@ pub async fn fetch(
             let fetch_prover_input_request = FetchProverInputRequest {
                 rpc_url: rpc_url.as_str(),
                 block_number,
-                checkpoint_block_number: match checkpoint_block_number {
-                    Some(checkpoint) => checkpoint,
-                    None if block_number == 0 => 0,
-                    None => block_number - 1,
-                },
+                checkpoint_block_number: checkpoint_method
+                    .unwrap_or_default()
+                    .get_checkpoint(block_number),
             };
 
             match fetch_prover_input(fetch_prover_input_request).await {
