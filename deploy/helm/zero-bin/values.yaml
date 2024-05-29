@@ -78,20 +78,20 @@ hull:
                   port: 8080
                 initialDelaySeconds: 10
                 periodSeconds: 5
-          # affinity:
-          #   nodeAffinity:
-          #     requiredDuringSchedulingIgnoredDuringExecution:
-          #       nodeSelectorTerms:
-          #       - matchExpressions:
-          #         - key: workload
-          #           operator: In
-          #           values:
-          #           - zk          
-          # tolerations:
-          #   - key: "workload"
-          #     operator: "Equal"
-          #     value: "zk"
-          #     effect: "NoSchedule"
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: workload
+                    operator: In
+                    values:
+                    - zk          
+          tolerations:
+            - key: "workload"
+              operator: "Equal"
+              value: "zk"
+              effect: "NoSchedule"
       worker:
         replicas: 1
         pod:
