@@ -65,7 +65,7 @@ impl BenchmarkingStats {
     /// Returns a header row
     pub fn header_row() -> String {
         String::from(
-            "block_number, number_txs, cumulative_number_txs, fetch_duration, total_proof_duration, prep_duration, txproof_duration, agg_duration, start_time, end_time, overall_elapsed_time, proof_out_duration, gas_used, cumulative_gas_used, difficulty, gas_used_per_tx",
+            "block_number, number_txs, cumulative_number_txs, fetch_duration, unique_proof_duration, prep_duration, txproof_duration, agg_duration, start_time, end_time, cumulative_elapsed_time, proof_out_duration, gas_used, cumulative_gas_used, difficulty, gas_used_per_tx",
         )
     }
 
