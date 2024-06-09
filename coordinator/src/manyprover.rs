@@ -13,7 +13,7 @@ use paladin::runtime::Runtime;
 use proof_gen::proof_types::GeneratedBlockProof;
 use proof_gen::types::PlonkyProofIntern;
 use tokio::task::JoinError;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info, warn, instrument};
 
 use crate::benchmarking::{
     BenchmarkingOutput, BenchmarkingOutputBuildError, BenchmarkingOutputError, BenchmarkingStats,
@@ -85,6 +85,7 @@ pub struct ManyProver {
 impl ManyProver {
     /// Returns the [ManyProver] object.  This can be used to run many proofs
     /// and gather benchmarking statistics simultaneously.
+    #[instrument]
     pub async fn new(
         input: ProveBlocksInput,
         runtime: Arc<Runtime>,
@@ -202,7 +203,7 @@ impl ManyProver {
     //===========================================================================================
     // Running
     //===========================================================================================
-
+    #[instrument]
     pub async fn prove_blocks(&mut self) -> Result<(), ManyProverError> {
         // Depending on the block concurrency mode, prove sequentially or in parallel
         info!("Starting block proving process");
@@ -232,7 +233,7 @@ impl ManyProver {
     //===========================================================================================
     // Parallel Block Proving
     //===========================================================================================
-
+    #[instrument]
     pub async fn prove_blocks_parallel(&mut self) -> Result<(), ManyProverError> {
         //========================================================================
         // Function to prove a singular block in parallel
@@ -250,6 +251,7 @@ impl ManyProver {
         }
 
         /// Function that proves a block
+        #[instrument]
         async fn prove_block(
             prove_block_task_input: ProveBlockTaskInput,
         ) -> Result<ParallelBlockProof, ManyProverError> {
@@ -385,6 +387,7 @@ impl ManyProver {
         /// the worker continually pulls tasks from the task_receiver, performs
         /// the proof, and then sends results back to the master thread using
         /// result_sender.
+        #[instrument]
         async fn pull_task_and_do_it(
             start_working: Arc<AtomicBool>,
             task_receiver: async_channel::Receiver<ProveBlockTaskInput>,
@@ -624,6 +627,7 @@ impl ManyProver {
     //===========================================================================================
 
     /// Sequentially proves blocks
+    #[instrument]
     pub async fn prove_blocks_sequentially(&mut self) -> Result<(), ManyProverError> {
         //========================================================================
         // Init

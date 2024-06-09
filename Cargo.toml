@@ -29,6 +29,11 @@ proof_gen = { git = "https://github.com/0xPolygonZero/zk_evm.git", tag = "v0.3.1
 google-cloud-storage = "0.16.0"
 google-cloud-googleapis = "0.12.0"
 google-cloud-auth = "0.13.2"
+opentelemetry = { version = "0.19", features = ["rt-tokio"] }
+opentelemetry-gcloud-trace = "0.5"
+opentelemetry-semantic-conventions = "0.11"
+tracing-opentelemetry = "0.18"
+
 
 [workspace.package]
 edition = "2021"

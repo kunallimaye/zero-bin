@@ -16,7 +16,7 @@ use paladin::{
     runtime::Runtime,
 };
 // use leader::init;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info, warn, instrument};
 
 pub mod benchmarking;
 pub mod fetch;
@@ -166,6 +166,7 @@ async fn handle_health() -> impl Responder {
 }
 
 /// Recevies a request for [manyprover::ManyProver::prove_blocks]
+#[instrument]
 async fn handle_post(
     runtime: web::Data<Runtime>,
     input: web::Json<input::ProveBlocksInput>,
